@@ -1,12 +1,13 @@
-import time, datetime, os, threading, sys, asyncio
+import time, datetime, os, threading, sys, asyncio, configparser
 from livestreamer import Livestreamer
 from mfcauto import Client, Model, FCTYPE, STATE
 
 
-#specify path to save to ie "/Users/Joe/MFC"
-save_directory = "/Users/Joe/MFC"
-#specify the path to the wishlist file ie "/Users/Joe/MFC/wanted.txt"
-wishlist = "/Users/Joe/MFC/wanted.txt"
+Config = configparser.ConfigParser()
+Config.read(sys.path[0] + "/config.conf")
+save_directory = Config.get('paths', 'save_directory')
+wishlist = Config.get('paths', 'wishlist')
+interval = int(Config.get('settings', 'checkInterval'))
 online = []
 if not os.path.exists("{path}".format(path=save_directory)):
     os.makedirs("{path}".format(path=save_directory))
@@ -15,35 +16,38 @@ recording = []
 recordingNames = []
 
 def getOnlineModels():
+    wanted = []
+    with open(wishlist) as f:
+        for model in f:
+            models = model.split()
+            for theModel in models:
+                wanted.append(int(theModel))
+    f.close()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    client = Client(loop)
+
+    def query():
+        try:
+            MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value)
+            for model in MFConline:
+                if model.bestsession['uid'] in wanted and model.bestsession['uid'] not in recording:
+                    thread = threading.Thread(target=startRecording, args=(model.bestsession,))
+                    thread.start()
+            client.disconnect()
+        except:
+            client.disconnect()
+            pass
+
+            # loop.call_later(20, query)
+
+    client.on(FCTYPE.CLIENT_MODELSLOADED, query)
     try:
-        wanted = []
-        loop = asyncio.get_event_loop()
-        client = Client(loop)
-        with open(wishlist) as f:
-            for model in f:
-                models = model.split()
-                for theModel in models:
-                    wanted.append(int(theModel))
-        f.close()
-
-        def query():
-            try:
-                MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value)
-                client.disconnect()
-                for model in MFConline:
-                    if model.bestsession['uid'] in wanted and model.bestsession['uid'] not in recording:
-                        thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                        thread.start()
-
-            except:
-                client.disconnect()
-                pass
-
-        client.on(FCTYPE.CLIENT_MODELSLOADED, query)
         loop.run_until_complete(client.connect())
         loop.run_forever()
     except:
         pass
+    loop.close()
 
 def startRecording(model):
     try:
