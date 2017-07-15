@@ -18,7 +18,7 @@ python3.5 -m pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@
 
 ## Setup
 
-edit lines 6 and 8 to set the path for the directory to save the videos to, and to set the location of the "wanted.txt" file.
+edit the config.conf file changing the path for the directory to save the videos to, and to set the location of the "wanted.txt" file. You can also adjust the interval between checks if you would like.
 
 Add models UID (user ID) to the "wanted.txt" file (only one model per line). This uses the UID instead of the name becaue the models can change their name at anytime, but their UID always stays the same. There is a number of ways to get the models UID, but the easiest would probably be to get it from the URL for their profile image. The profile image URL is formatted as (or similar to):
 ```
