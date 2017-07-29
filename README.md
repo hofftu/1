@@ -34,14 +34,23 @@ I plan to add easier methods to add the models UID, but for now, this will do th
 ## Additional options
 
 you can now set a custom "completed" directory where the videos will be moved when the stream ends. The variables which can be used in the naming are as follows:
+
 {path} = the value set to "save directory"
+
 {model} = the display name of the model
+
 {uid} = the uid (user id) or broadcasters id as its often reffered in MFCs code which is a static number for the model
+
 {year} = the current 4 digit year (ie:2017)
+
 {month} = the current two digit month (ie: 01 for January)
+
 {day} = the two digit day of the month
+
 {hour} = the two digit hour in 24 hour format (ie: 1pm = 13)
+
 {minute} = the current minute value in two digit format (ie: 1:28 = 28)
+
 {seconds} = the current times seconds value in 2 digit format
 
 For example, if a made up model named "hannah" who has the uid 208562, and the "save_directory" in the config file == "/Users/Joe/MFC/": {path}/{uid}/{year}/{year}.{month}.{day}_{hour}.{minutes}.{seconds}_{model}.mp4 = "/Users/Joe/MFC/208562/2017/2017.07.26_19.34.47_hannah.mp4"
@@ -50,7 +59,11 @@ For example, if a made up model named "hannah" who has the uid 208562, and the "
 You can create your own "post processing" script which can be called at the end of the stream. The parameters which will be passed to the script are as follows:
 
 1 = full file path (ie: /Users/Joe/MFC/208562/2017/2017.07.26_19.34.47_hannah.mp4)
+
 2 = filename (ie : 2017.07.26_19.34.47_hannah.mp4)
+
 3 = directory (ie : /Users/Joe/MFC/208562/hannah/2017/)
+
 4 = models name (ie: hannah)
+
 5 = uid (ie: 208562 as given in the directory/file naming structure example above)
