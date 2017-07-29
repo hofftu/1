@@ -1,5 +1,6 @@
-import time, datetime, os, threading, sys, asyncio, configparser
+import time, datetime, os, threading, sys, asyncio, configparser, subprocess
 from livestreamer import Livestreamer
+from queue import Queue
 from mfcauto import Client, Model, FCTYPE, STATE
 
 
@@ -8,6 +9,14 @@ Config.read(sys.path[0] + "/config.conf")
 save_directory = Config.get('paths', 'save_directory')
 wishlist = Config.get('paths', 'wishlist')
 interval = int(Config.get('settings', 'checkInterval'))
+directory_structure = Config.get('paths', 'directory_structure').lower()
+postProcessingCommand = Config.get('settings', 'postProcessingCommand')
+try:
+    postProcessingThreads = int(Config.get('settings', 'postProcessingThreads'))
+except ValueError:
+    pass
+completed_directory = Config.get('paths', 'completed_directory').lower()
+
 online = []
 if not os.path.exists("{path}".format(path=save_directory)):
     os.makedirs("{path}".format(path=save_directory))
@@ -18,10 +27,9 @@ recordingNames = []
 def getOnlineModels():
     wanted = []
     with open(wishlist) as f:
-        for model in f:
-            models = model.split()
-            for theModel in models:
-                wanted.append(int(theModel))
+        models = list(set(f.readlines()))
+        for theModel in models:
+            wanted.append(int(theModel))
     f.close()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -39,8 +47,6 @@ def getOnlineModels():
             client.disconnect()
             pass
 
-            # loop.call_later(20, query)
-
     client.on(FCTYPE.CLIENT_MODELSLOADED, query)
     try:
         loop.run_until_complete(client.connect())
@@ -57,12 +63,15 @@ def startRecording(model):
             srv=(int(model['camserv']) - 500)))
         stream = streams["best"]
         fd = stream.open()
-        ts = time.time()
-        st = datetime.datetime.fromtimestamp(ts).strftime("%Y.%m.%d_%H.%M.%S")
-        if not os.path.exists("{path}/{model}".format(path=save_directory, model=model['uid'])):
-            os.makedirs("{path}/{model}".format(path=save_directory, model=model['uid']))
-        with open("{path}/{uid}/{st}_{model}.mp4".format(path=save_directory, uid=model['uid'], model=model['nm'],
-                                                           st=st), 'wb') as f:
+        now = datetime.datetime.now()
+        filePath = directory_structure.format(path=save_directory, model=model['nm'], uid=model['uid'],
+                                              seconds=now.strftime("%S"), day=now.strftime("%d"),
+                                              minutes=now.strftime("%M"), hour=now.strftime("%H"),
+                                              month=now.strftime("%m"), year=now.strftime("%Y"))
+        directory = filePath.rsplit('/', 1)[0]+'/'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        with open(filePath, 'wb') as f:
             recording.append(model['uid'])
             recordingNames.append(model['nm'])
             while True:
@@ -73,6 +82,16 @@ def startRecording(model):
                     f.close()
                     recording.remove(model['uid'])
                     recordingNames.remove(model['nm'])
+                    if postProcessingCommand != "":
+                        processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
+                    elif completed_directory != "":
+                        finishedDir = completed_directory.format(path=save_directory, model=model, uid=model['uid'],
+                                                                 seconds=now.strftime("%S"), minutes=now.strftime("%M"),
+                                                                 hour=now.strftime("%H"), day=now.strftime("%d"),
+                                                                 month=now.strftime("%m"), year=now.strftime("%Y"))
+                        if not os.path.exists(finishedDir):
+                            os.makedirs(finishedDir)
+                        os.rename(filePath, finishedDir+'/'+filePath.rsplit['/', 1][0])
                     return
 
         if model in recording:
@@ -83,8 +102,31 @@ def startRecording(model):
             recording.remove(model['uid'])
             recordingNames.remove(model['nm'])
 
+def postProcess():
+    global processingQueue
+    global postProcessingCommand
+    while True:
+        while processingQueue.empty():
+            time.sleep(1)
+        parameters = processingQueue.get()
+        print("got parameters")
+        model = parameters['model']
+        path = parameters['path']
+        filename = path.rsplit('/', 1)[1]
+        uid = str(parameters['uid'])
+        directory = path.rsplit('/', 1)[0]+'/'
+        print(postProcessingCommand.split() + [path, filename, directory, model, uid])
+        subprocess.call(postProcessingCommand.split() + [path, filename, directory, model, uid])
+
 
 if __name__ == '__main__':
+    if postProcessingCommand != "":
+        processingQueue = Queue()
+        postprocessingWorkers = []
+        for i in range(0, postProcessingThreads):
+            t = threading.Thread(target=postProcess)
+            postprocessingWorkers.append(t)
+            t.start()
     print("____________________Connection Status____________________")
     while True:
         getOnlineModels()
