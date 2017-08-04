@@ -141,7 +141,7 @@ if __name__ == '__main__':
         print("Disconnected:")
         print("Waiting for next check")
         print("____________________Recording Status_____________________")
-        for i in range(20, 0, -1):
+        for i in range(interval, 0, -1):
             sys.stdout.write("\033[K")
             print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
             sys.stdout.write("\033[K")
