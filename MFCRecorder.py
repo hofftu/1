@@ -8,9 +8,14 @@ Config = configparser.ConfigParser()
 Config.read(sys.path[0] + "/config.conf")
 save_directory = Config.get('paths', 'save_directory')
 wishlist = Config.get('paths', 'wishlist')
+blacklist = Config.get('paths', 'blacklist')
 interval = int(Config.get('settings', 'checkInterval'))
+minViewers = int(Config.get('settings', 'minViewers'))
 directory_structure = Config.get('paths', 'directory_structure').lower()
 postProcessingCommand = Config.get('settings', 'postProcessingCommand')
+viewers = int(Config.get('AutoRecording', 'viewers'))
+newerThanHours = int(Config.get('AutoRecording', 'newerThanHours'))
+score = int(Config.get('AutoRecording', 'score'))
 try:
     postProcessingThreads = int(Config.get('settings', 'postProcessingThreads'))
 except ValueError:
@@ -31,6 +36,13 @@ def getOnlineModels():
         for theModel in models:
             wanted.append(int(theModel))
     f.close()
+    blacklisted = []
+    if blacklist:
+        with open(blacklist) as f:
+            models = list(set(f.readlines()))
+            for theModel in models:
+                blacklisted.append(int(theModel))
+        f.close()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     client = Client(loop)
@@ -38,10 +50,33 @@ def getOnlineModels():
     def query():
         try:
             MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value)
+            now = int(time.time())
             for model in MFConline:
-                if model.bestsession['uid'] in wanted and model.bestsession['uid'] not in recording:
-                    thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                    thread.start()
+                if model.bestsession['uid'] not in recording:
+                    if model.bestsession['uid'] in wanted:
+                        if minViewers and model.bestsession['rc'] > minViewers:
+                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
+                            thread.start()
+                        elif not minViewers:
+                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
+                            thread.start()
+                    if newerThanHours and model.bestsession['creation'] > now - newerThanHours * 60 * 60:
+                        if minViewers and model.bestsession['rc'] > minViewers:
+                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
+                            thread.start()
+                        elif not minViewers:
+                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
+                            thread.start()
+                    elif viewers and model.bestsession['rc'] > viewers:
+                        thread = threading.Thread(target=startRecording, args=(model.bestsession,))
+                        thread.start()
+                    elif score and model.bestsession['camscore'] > score:
+                        if minViewers and model.bestsession['rc'] > minViewers:
+                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
+                            thread.start()
+                        elif not minViewers:
+                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
+                            thread.start()
             client.disconnect()
         except:
             client.disconnect()
