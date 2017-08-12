@@ -29,7 +29,14 @@ https://img.mfcimg.com/photos2/###/{uid}/avatar.90x90.jpg
 https://img.mfcimg.com/photos2/123/123456789/avatar.90x90.jpg
 ```
 
-I plan to add easier methods to add the models UID, but for now, this will do the job.
+alternatively, you can add a model with the "add.py" script (must be ran with python3.5 or newer).
+
+Its usage is as follows:
+add.py {models_display_name}
+
+ie:
+add.py AspenRae
+
 
 ## Additional options
 
