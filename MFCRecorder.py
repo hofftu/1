@@ -144,12 +144,14 @@ def startRecording(model):
                 os.rename(filePath, finishedDir+'/'+filePath.rsplit('/', 1)[1])
                 return
 
-        if model in recording:
+        if model['uid'] in recording:
             recording.remove(model['uid'])
+        if model['nm'] in recordingNames:
             recordingNames.remove(model['nm'])
     except:
-        if model in recording:
+        if model['uid'] in recording:
             recording.remove(model['uid'])
+        if model['nm'] in recordingNames:
             recordingNames.remove(model['nm'])
 
 def postProcess():
