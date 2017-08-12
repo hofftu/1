@@ -12,6 +12,7 @@ blacklist = Config.get('paths', 'blacklist')
 interval = int(Config.get('settings', 'checkInterval'))
 directory_structure = Config.get('paths', 'directory_structure').lower()
 postProcessingCommand = Config.get('settings', 'postProcessingCommand')
+stopViewers = int(Config.get('settings', 'stopViewers'))
 
 filter = {
     'minViewers': int(Config.get('settings', 'minViewers')),
@@ -20,6 +21,8 @@ filter = {
     'score': int(Config.get('AutoRecording', 'score')),
     'blacklisted': [],
     'wanted': []}
+
+if stopViewers > filter['minViewers']:filter['minViewers'] = stopViewers
 
 try:
     postProcessingThreads = int(Config.get('settings', 'postProcessingThreads'))
@@ -31,12 +34,15 @@ online = []
 if not os.path.exists("{path}".format(path=save_directory)):
     os.makedirs("{path}".format(path=save_directory))
 
+# global variables
 recording = []
 recordingNames = []
+modelDict = {}
+
 
 def recordModel(model, now):
     session = model.bestsession
-    
+
     if filter['minViewers'] and session['rc'] < filter['minViewers']:
         return False
     if session['uid'] in filter['wanted']:
@@ -52,6 +58,7 @@ def recordModel(model, now):
     return False
 
 def getOnlineModels():
+    global modelDict
     wanted = []
     with open(wishlist) as f:
         models = list(set(f.readlines()))
@@ -67,20 +74,23 @@ def getOnlineModels():
         f.close()
     filter['wanted'] = wanted
     filter['blacklisted'] = blacklisted
-    
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     client = Client(loop)
 
     def query():
+        global modelDict
         try:
             MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value)
             now = int(time.time())
             for model in MFConline:
+                modelDict[model.bestsession['uid']] = int(model.bestsession['rc'])
                 if model.bestsession['uid'] not in recording and recordModel(model, now):
+
                     thread = threading.Thread(target=startRecording, args=(model.bestsession,))
                     thread.start()
-                    
+
             client.disconnect()
         except:
             client.disconnect()
@@ -95,6 +105,7 @@ def getOnlineModels():
     loop.close()
 
 def startRecording(model):
+    global modelDict
     try:
         session = Livestreamer()
         streams = session.streams("hlsvariant://http://video{srv}.myfreecams.com:1935/NxServer/ngrp:mfc_{id}.f4v_mobile/playlist.m3u8"
@@ -113,7 +124,7 @@ def startRecording(model):
         with open(filePath, 'wb') as f:
             recording.append(model['uid'])
             recordingNames.append(model['nm'])
-            while True:
+            while modelDict[model['uid']] >= stopViewers:
                 try:
                     data = fd.read(1024)
                     f.write(data)
@@ -121,16 +132,16 @@ def startRecording(model):
                     f.close()
                     recording.remove(model['uid'])
                     recordingNames.remove(model['nm'])
-                    if postProcessingCommand != "":
-                        processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
-                    elif completed_directory != "":
-                        finishedDir = completed_directory.format(path=save_directory, model=model, uid=model['uid'],
-                                                                 seconds=now.strftime("%S"), minutes=now.strftime("%M"),
-                                                                 hour=now.strftime("%H"), day=now.strftime("%d"),
-                                                                 month=now.strftime("%m"), year=now.strftime("%Y"))
-                        if not os.path.exists(finishedDir):
-                            os.makedirs(finishedDir)
-                        os.rename(filePath, finishedDir+'/'+filePath.rsplit('/', 1)[1])
+                if postProcessingCommand != "":
+                    processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
+                elif completed_directory != "":
+                    finishedDir = completed_directory.format(path=save_directory, model=model, uid=model['uid'],
+                                                             seconds=now.strftime("%S"), minutes=now.strftime("%M"),
+                                                             hour=now.strftime("%H"), day=now.strftime("%d"),
+                                                             month=now.strftime("%m"), year=now.strftime("%Y"))
+                    if not os.path.exists(finishedDir):
+                        os.makedirs(finishedDir)
+                    os.rename(filePath, finishedDir+'/'+filePath.rsplit('/', 1)[1])
                     return
 
         if model in recording:
