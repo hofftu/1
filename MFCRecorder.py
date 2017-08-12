@@ -126,7 +126,7 @@ def startRecording(model):
                                                                  month=now.strftime("%m"), year=now.strftime("%Y"))
                         if not os.path.exists(finishedDir):
                             os.makedirs(finishedDir)
-                        os.rename(filePath, finishedDir+'/'+filePath.rsplit['/', 1][0])
+                        os.rename(filePath, finishedDir+'/'+filePath.rsplit('/', 1)[1])
                     return
 
         if model in recording:
