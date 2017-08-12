@@ -130,8 +130,12 @@ def startRecording(model):
                     f.write(data)
                 except:
                     f.close()
-            recording.remove(model['uid'])
-            recordingNames.remove(model['nm'])
+                    recording.remove(model['uid'])
+                    recordingNames.remove(model['nm'])
+            if model['uid'] in recording:
+                recording.remove(model['uid'])
+            if model['nm'] in recordingNames:
+                recordingNames.remove(model['nm'])
             if postProcessingCommand != "":
                 processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
             elif completed_directory != "":
