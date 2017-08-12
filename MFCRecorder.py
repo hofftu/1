@@ -10,12 +10,17 @@ save_directory = Config.get('paths', 'save_directory')
 wishlist = Config.get('paths', 'wishlist')
 blacklist = Config.get('paths', 'blacklist')
 interval = int(Config.get('settings', 'checkInterval'))
-minViewers = int(Config.get('settings', 'minViewers'))
 directory_structure = Config.get('paths', 'directory_structure').lower()
 postProcessingCommand = Config.get('settings', 'postProcessingCommand')
-viewers = int(Config.get('AutoRecording', 'viewers'))
-newerThanHours = int(Config.get('AutoRecording', 'newerThanHours'))
-score = int(Config.get('AutoRecording', 'score'))
+
+filter = {
+    'minViewers': int(Config.get('settings', 'minViewers')),
+    'viewers': int(Config.get('AutoRecording', 'viewers')),
+    'newerThanHours': int(Config.get('AutoRecording', 'newerThanHours')),
+    'score': int(Config.get('AutoRecording', 'score')),
+    'blacklisted': [],
+    'wanted': []}
+
 try:
     postProcessingThreads = int(Config.get('settings', 'postProcessingThreads'))
 except ValueError:
@@ -28,6 +33,23 @@ if not os.path.exists("{path}".format(path=save_directory)):
 
 recording = []
 recordingNames = []
+
+def recordModel(model, now):
+    session = model.bestsession
+    
+    if filter['minViewers'] and session['rc'] < filter['minViewers']:
+        return False
+    if session['uid'] in filter['wanted']:
+        return True
+    if session['uid'] in filter['blacklisted']:
+        return False
+    if filter['newerThanHours'] and session['creation'] > now - filter['newerThanHours'] * 60 * 60:
+        return True
+    if filter['viewers'] and session['rc'] > filter['viewers']:
+        return True
+    if filter['score'] and session['camscore'] > filter['score']:
+        return True
+    return False
 
 def getOnlineModels():
     wanted = []
@@ -43,6 +65,9 @@ def getOnlineModels():
             for theModel in models:
                 blacklisted.append(int(theModel))
         f.close()
+    filter['wanted'] = wanted
+    filter['blacklisted'] = blacklisted
+    
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     client = Client(loop)
@@ -52,31 +77,10 @@ def getOnlineModels():
             MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value)
             now = int(time.time())
             for model in MFConline:
-                if model.bestsession['uid'] not in recording:
-                    if model.bestsession['uid'] in wanted:
-                        if minViewers and model.bestsession['rc'] > minViewers:
-                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                            thread.start()
-                        elif not minViewers:
-                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                            thread.start()
-                    if newerThanHours and model.bestsession['creation'] > now - newerThanHours * 60 * 60:
-                        if minViewers and model.bestsession['rc'] > minViewers:
-                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                            thread.start()
-                        elif not minViewers:
-                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                            thread.start()
-                    elif viewers and model.bestsession['rc'] > viewers:
-                        thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                        thread.start()
-                    elif score and model.bestsession['camscore'] > score:
-                        if minViewers and model.bestsession['rc'] > minViewers:
-                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                            thread.start()
-                        elif not minViewers:
-                            thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                            thread.start()
+                if model.bestsession['uid'] not in recording and recordModel(model, now):
+                    thread = threading.Thread(target=startRecording, args=(model.bestsession,))
+                    thread.start()
+                    
             client.disconnect()
         except:
             client.disconnect()
