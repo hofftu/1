@@ -130,19 +130,19 @@ def startRecording(model):
                     f.write(data)
                 except:
                     f.close()
-                    recording.remove(model['uid'])
-                    recordingNames.remove(model['nm'])
-                if postProcessingCommand != "":
-                    processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
-                elif completed_directory != "":
-                    finishedDir = completed_directory.format(path=save_directory, model=model, uid=model['uid'],
-                                                             seconds=now.strftime("%S"), minutes=now.strftime("%M"),
-                                                             hour=now.strftime("%H"), day=now.strftime("%d"),
-                                                             month=now.strftime("%m"), year=now.strftime("%Y"))
-                    if not os.path.exists(finishedDir):
-                        os.makedirs(finishedDir)
-                    os.rename(filePath, finishedDir+'/'+filePath.rsplit('/', 1)[1])
-                    return
+            recording.remove(model['uid'])
+            recordingNames.remove(model['nm'])
+            if postProcessingCommand != "":
+                processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
+            elif completed_directory != "":
+                finishedDir = completed_directory.format(path=save_directory, model=model, uid=model['uid'],
+                                                         seconds=now.strftime("%S"), minutes=now.strftime("%M"),
+                                                         hour=now.strftime("%H"), day=now.strftime("%d"),
+                                                         month=now.strftime("%m"), year=now.strftime("%Y"))
+                if not os.path.exists(finishedDir):
+                    os.makedirs(finishedDir)
+                os.rename(filePath, finishedDir+'/'+filePath.rsplit('/', 1)[1])
+                return
 
         if model in recording:
             recording.remove(model['uid'])
