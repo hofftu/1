@@ -12,17 +12,19 @@ blacklist = Config.get('paths', 'blacklist')
 interval = int(Config.get('settings', 'checkInterval'))
 directory_structure = Config.get('paths', 'directory_structure').lower()
 postProcessingCommand = Config.get('settings', 'postProcessingCommand')
-stopViewers = int(Config.get('settings', 'stopViewers'))
+
 
 filter = {
     'minViewers': int(Config.get('settings', 'minViewers')),
     'viewers': int(Config.get('AutoRecording', 'viewers')),
     'newerThanHours': int(Config.get('AutoRecording', 'newerThanHours')),
     'score': int(Config.get('AutoRecording', 'score')),
+    'autoStopViewers': int(Config.get('AutoRecording', 'autoStopViewers')),
+    'stopViewers': int(Config.get('settings', 'StopViewers')),
     'blacklisted': [],
     'wanted': []}
 
-if stopViewers > filter['minViewers']:filter['minViewers'] = stopViewers
+if filter['stopViewers'] > filter['minViewers']:filter['minViewers'] = filter['stopViewers']
 
 try:
     postProcessingThreads = int(Config.get('settings', 'postProcessingThreads'))
@@ -87,7 +89,6 @@ def getOnlineModels():
             for model in MFConline:
                 modelDict[model.bestsession['uid']] = int(model.bestsession['rc'])
                 if model.bestsession['uid'] not in recording and recordModel(model, now):
-
                     thread = threading.Thread(target=startRecording, args=(model.bestsession,))
                     thread.start()
 
@@ -104,8 +105,10 @@ def getOnlineModels():
         pass
     loop.close()
 
+
 def startRecording(model):
     global modelDict
+
     try:
         session = Livestreamer()
         streams = session.streams("hlsvariant://http://video{srv}.myfreecams.com:1935/NxServer/ngrp:mfc_{id}.f4v_mobile/playlist.m3u8"
@@ -124,14 +127,25 @@ def startRecording(model):
         with open(filePath, 'wb') as f:
             recording.append(model['uid'])
             recordingNames.append(model['nm'])
-            while modelDict[model['uid']] >= stopViewers:
-                try:
-                    data = fd.read(1024)
-                    f.write(data)
-                except:
-                    f.close()
-                    recording.remove(model['uid'])
-                    recordingNames.remove(model['nm'])
+            if model['uid'] not in filter['wanted']: 
+                while modelDict[model['uid']] >= filter['autoStopViewers']:
+                    try:
+                        data = fd.read(1024)
+                        f.write(data)
+                    except:
+                        f.close()
+                        recording.remove(model['uid'])
+                        recordingNames.remove(model['nm'])
+            else:
+                while modelDict[model['uid']] >= filter['stopViewers']:
+                    try:
+                        data = fd.read(1024)
+                        f.write(data)
+                    except:
+                        f.close()
+                        recording.remove(model['uid'])
+                        recordingNames.remove(model['nm'])
+    
             if model['uid'] in recording:
                 recording.remove(model['uid'])
             if model['nm'] in recordingNames:
@@ -157,6 +171,7 @@ def startRecording(model):
             recording.remove(model['uid'])
         if model['nm'] in recordingNames:
             recordingNames.remove(model['nm'])
+    
 
 def postProcess():
     global processingQueue
