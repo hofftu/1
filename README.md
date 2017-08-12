@@ -35,7 +35,9 @@ Its usage is as follows:
 add.py {models_display_name}
 
 ie:
+```
 add.py AspenRae
+```
 
 
 ## Additional options
