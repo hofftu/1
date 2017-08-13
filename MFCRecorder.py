@@ -25,6 +25,7 @@ filter = {
     'wanted': []}
 
 if filter['stopViewers'] > filter['minViewers']:filter['minViewers'] = filter['stopViewers']
+if filter['viewers'] < filter['autoStopViewers']:filter['viewers'] = filter['autoStopViewers']
 
 try:
     postProcessingThreads = int(Config.get('settings', 'postProcessingThreads'))
@@ -45,17 +46,30 @@ modelDict = {}
 def recordModel(model, now):
     session = model.bestsession
 
-    if filter['minViewers'] and session['rc'] < filter['minViewers']:
-        return False
     if session['uid'] in filter['wanted']:
-        return True
+        if filter['minViewers'] and session['rc'] < filter['minViewers']:
+            return False
+        else:
+            session['condition'] = 'wanted'
+            thread = threading.Thread(target=startRecording, args=(session,))
+            thread.start()
+            return True
     if session['uid'] in filter['blacklisted']:
         return False
     if filter['newerThanHours'] and session['creation'] > now - filter['newerThanHours'] * 60 * 60:
+        session['condition'] = 'newerThanHours'
+        thread = threading.Thread(target=startRecording, args=(session,))
+        thread.start()
         return True
     if filter['viewers'] and session['rc'] > filter['viewers']:
+        session['condition'] = 'viewers'
+        thread = threading.Thread(target=startRecording, args=(session,))
+        thread.start()
         return True
     if filter['score'] and session['camscore'] > filter['score']:
+        session['condition'] = 'score'
+        thread = threading.Thread(target=startRecording, args=(session,))
+        thread.start()
         return True
     return False
 
@@ -88,9 +102,8 @@ def getOnlineModels():
             now = int(time.time())
             for model in MFConline:
                 modelDict[model.bestsession['uid']] = int(model.bestsession['rc'])
-                if model.bestsession['uid'] not in recording and recordModel(model, now):
-                    thread = threading.Thread(target=startRecording, args=(model.bestsession,))
-                    thread.start()
+                if model.bestsession['uid'] not in recording:
+                    recordModel(model, now)
 
             client.disconnect()
         except:
@@ -127,7 +140,7 @@ def startRecording(model):
         with open(filePath, 'wb') as f:
             recording.append(model['uid'])
             recordingNames.append(model['nm'])
-            if model['uid'] not in filter['wanted']: 
+            if model['condition'] == 'viewers':
                 while modelDict[model['uid']] >= filter['autoStopViewers']:
                     try:
                         data = fd.read(1024)
