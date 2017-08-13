@@ -46,32 +46,28 @@ modelDict = {}
 def recordModel(model, now):
     session = model.bestsession
 
-    if session['uid'] in filter['wanted']:
-        if filter['minViewers'] and session['rc'] < filter['minViewers']:
+    def check():
+        if session['uid'] in filter['wanted']:
+            if filter['minViewers'] and session['rc'] < filter['minViewers']:
+                return False
+            else:
+                session['condition'] = 'wanted'
+                return True
+        if session['uid'] in filter['blacklisted']:
             return False
-        else:
-            session['condition'] = 'wanted'
-            thread = threading.Thread(target=startRecording, args=(session,))
-            thread.start()
+        if filter['newerThanHours'] and session['creation'] > now - filter['newerThanHours'] * 60 * 60:
+            session['condition'] = 'newerThanHours'
             return True
-    if session['uid'] in filter['blacklisted']:
+        if filter['viewers'] and session['rc'] > filter['viewers']:
+            session['condition'] = 'viewers'
+            return True
+        if filter['score'] and session['camscore'] > filter['score']:
+            session['condition'] = 'score'
+            return True
         return False
-    if filter['newerThanHours'] and session['creation'] > now - filter['newerThanHours'] * 60 * 60:
-        session['condition'] = 'newerThanHours'
+    if check():
         thread = threading.Thread(target=startRecording, args=(session,))
         thread.start()
-        return True
-    if filter['viewers'] and session['rc'] > filter['viewers']:
-        session['condition'] = 'viewers'
-        thread = threading.Thread(target=startRecording, args=(session,))
-        thread.start()
-        return True
-    if filter['score'] and session['camscore'] > filter['score']:
-        session['condition'] = 'score'
-        thread = threading.Thread(target=startRecording, args=(session,))
-        thread.start()
-        return True
-    return False
 
 def getOnlineModels():
     global modelDict
