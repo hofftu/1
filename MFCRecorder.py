@@ -38,8 +38,7 @@ if not os.path.exists("{path}".format(path=save_directory)):
     os.makedirs("{path}".format(path=save_directory))
 
 # global variables
-recording = []
-recordingNames = []
+recording = {}
 modelDict = {}
 
 
@@ -70,7 +69,6 @@ def recordModel(model, now):
         thread.start()
 
 def getOnlineModels():
-    global modelDict
     wanted = []
     with open(wishlist) as f:
         models = list(set(f.readlines()))
@@ -92,7 +90,6 @@ def getOnlineModels():
     client = Client(loop)
 
     def query():
-        global modelDict
         try:
             MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value)
             now = int(time.time())
@@ -116,8 +113,6 @@ def getOnlineModels():
 
 
 def startRecording(model):
-    global modelDict
-
     try:
         session = Livestreamer()
         streams = session.streams("hlsvariant://http://video{srv}.myfreecams.com:1935/NxServer/ngrp:mfc_{id}.f4v_mobile/playlist.m3u8"
@@ -134,31 +129,17 @@ def startRecording(model):
         if not os.path.exists(directory):
             os.makedirs(directory)
         with open(filePath, 'wb') as f:
-            recording.append(model['uid'])
-            recordingNames.append(model['nm'])
-            if model['condition'] == 'viewers':
-                while modelDict[model['uid']] >= filter['autoStopViewers']:
-                    try:
-                        data = fd.read(1024)
-                        f.write(data)
-                    except:
-                        f.close()
-                        recording.remove(model['uid'])
-                        recordingNames.remove(model['nm'])
-            else:
-                while modelDict[model['uid']] >= filter['stopViewers']:
-                    try:
-                        data = fd.read(1024)
-                        f.write(data)
-                    except:
-                        f.close()
-                        recording.remove(model['uid'])
-                        recordingNames.remove(model['nm'])
+            recording[model['uid']] = model['nm']
+            minViewers = filter['autoStopViewers'] if model['condition'] == 'viewers' else filter['stopViewers']
+            while modelDict[model['uid']] >= minViewers:
+                try:
+                    data = fd.read(1024)
+                    f.write(data)
+                except:
+                    f.close()
+                    recording.pop(model['uid'], None)
     
-            if model['uid'] in recording:
-                recording.remove(model['uid'])
-            if model['nm'] in recordingNames:
-                recordingNames.remove(model['nm'])
+            recording.pop(model['uid'], None)
             if postProcessingCommand != "":
                 processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
             elif completed_directory != "":
@@ -171,20 +152,11 @@ def startRecording(model):
                 os.rename(filePath, finishedDir+'/'+filePath.rsplit('/', 1)[1])
                 return
 
-        if model['uid'] in recording:
-            recording.remove(model['uid'])
-        if model['nm'] in recordingNames:
-            recordingNames.remove(model['nm'])
-    except:
-        if model['uid'] in recording:
-            recording.remove(model['uid'])
-        if model['nm'] in recordingNames:
-            recordingNames.remove(model['nm'])
+    finally:
+        recording.pop(model['uid'], None)
     
 
 def postProcess():
-    global processingQueue
-    global postProcessingCommand
     while True:
         while processingQueue.empty():
             time.sleep(1)
@@ -225,7 +197,7 @@ if __name__ == '__main__':
             sys.stdout.write("\033[K")
             print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
             sys.stdout.write("\033[K")
-            print("the following models are being recorded: {}".format(recordingNames), end="\r")
+            print("the following models are being recorded: {}".format(list(recording.values())), end="\r")
             time.sleep(1)
             sys.stdout.write("\033[F")
         sys.stdout.write("\033[F")
