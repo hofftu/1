@@ -1,4 +1,4 @@
-import time, datetime, os, threading, sys, asyncio, configparser, subprocess
+import time, datetime, os, threading, sys, asyncio, configparser, subprocess, requests, json
 from livestreamer import Livestreamer
 from queue import Queue
 from mfcauto import Client, Model, FCTYPE, STATE
@@ -12,7 +12,6 @@ blacklist = Config.get('paths', 'blacklist')
 interval = int(Config.get('settings', 'checkInterval'))
 directory_structure = Config.get('paths', 'directory_structure').lower()
 postProcessingCommand = Config.get('settings', 'postProcessingCommand')
-
 
 filter = {
     'minViewers': int(Config.get('settings', 'minViewers')),
@@ -67,6 +66,7 @@ def recordModel(model, now):
     if check():
         thread = threading.Thread(target=startRecording, args=(session,))
         thread.start()
+        return True
 
 def getOnlineModels():
     wanted = []
@@ -88,22 +88,43 @@ def getOnlineModels():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     client = Client(loop)
-
     def query():
         try:
             MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value)
             now = int(time.time())
             for model in MFConline:
-                modelDict[model.bestsession['uid']] = int(model.bestsession['rc'])
+                modelDict[model.bestsession['uid']] = model.bestsession
                 if model.bestsession['uid'] not in recording:
                     recordModel(model, now)
+        except:client.disconnect()
+
+    def checkTags(p):
+        Config.read(sys.path[0] + "/config.conf")
+        minTags = int(Config.get('AutoRecording', 'minTags'))
+        wantedTags = [x.strip() for x in Config.get('AutoRecording', 'tags').split(',')]
+        if wantedTags and minTags and p.smessage['msg']['arg2'] == 20:
+            url = "http://www.myfreecams.com/php/FcwExtResp.php?"
+            for name in ["respkey", "type", "opts", "serv"]:
+                if name in p.smessage:
+                    url += "{}={}&".format(name, p.smessage.setdefault(name, None))
+            result = requests.get(url).text
+            Tags = json.loads(result)['rdata']
+            for model in Tags.keys():
+                try:
+                    if model not in recording.keys() and len([element for element in wantedTags if element in Tags[model]]) >= minTags:
+                        model = int(model)
+                        modelDict[model]['condition'] = 'tags'
+                        thread = threading.Thread(target=startRecording, args=(modelDict[model],))
+                        thread.start()
+                except KeyError:
+                    pass
 
             client.disconnect()
-        except:
+        elif not wantedTags or not minTags:
             client.disconnect()
-            pass
 
     client.on(FCTYPE.CLIENT_MODELSLOADED, query)
+    client.on(FCTYPE.EXTDATA, lambda p: checkTags(p))
     try:
         loop.run_until_complete(client.connect())
         loop.run_forever()
@@ -114,6 +135,7 @@ def getOnlineModels():
 
 def startRecording(model):
     try:
+        recording[model['uid']] = model['nm']
         session = Livestreamer()
         streams = session.streams("hlsvariant://http://video{srv}.myfreecams.com:1935/NxServer/ngrp:mfc_{id}.f4v_mobile/playlist.m3u8"
           .format(id=(int(model['uid']) + 100000000),
@@ -129,16 +151,15 @@ def startRecording(model):
         if not os.path.exists(directory):
             os.makedirs(directory)
         with open(filePath, 'wb') as f:
-            recording[model['uid']] = model['nm']
             minViewers = filter['autoStopViewers'] if model['condition'] == 'viewers' else filter['stopViewers']
-            while modelDict[model['uid']] >= minViewers:
+            while modelDict[model['uid']]['rc'] >= minViewers:
                 try:
                     data = fd.read(1024)
                     f.write(data)
                 except:
                     f.close()
                     recording.pop(model['uid'], None)
-    
+
             recording.pop(model['uid'], None)
             if postProcessingCommand != "":
                 processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
@@ -154,7 +175,7 @@ def startRecording(model):
 
     finally:
         recording.pop(model['uid'], None)
-    
+
 
 def postProcess():
     while True:
