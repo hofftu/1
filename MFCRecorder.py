@@ -101,7 +101,7 @@ def getOnlineModels():
     def checkTags(p):
         Config.read(sys.path[0] + "/config.conf")
         minTags = int(Config.get('AutoRecording', 'minTags'))
-        wantedTags = [x.strip() for x in Config.get('AutoRecording', 'tags').split(',')]
+        wantedTags = [x.strip().lower() for x in Config.get('AutoRecording', 'tags').split(',')]
         if wantedTags and minTags and p.smessage['msg']['arg2'] == 20:
             url = "http://www.myfreecams.com/php/FcwExtResp.php?"
             for name in ["respkey", "type", "opts", "serv"]:
@@ -111,7 +111,8 @@ def getOnlineModels():
             Tags = json.loads(result)['rdata']
             for model in Tags.keys():
                 try:
-                    if model not in recording.keys() and len([element for element in wantedTags if element in Tags[model]]) >= minTags:
+                    Tags[model] = [x.strip().lower() for x in Tags['model']]
+                    if int(model) not in recording.keys() and len([element for element in wantedTags if element in Tags[model]]) >= minTags:
                         model = int(model)
                         modelDict[model]['condition'] = 'tags'
                         thread = threading.Thread(target=startRecording, args=(modelDict[model],))
