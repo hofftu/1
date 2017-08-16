@@ -111,7 +111,7 @@ def getOnlineModels():
             Tags = json.loads(result)['rdata']
             for model in Tags.keys():
                 try:
-                    Tags[model] = [x.strip().lower() for x in Tags['model']]
+                    Tags[model] = [x.strip().lower() for x in Tags[model]]
                     if int(model) not in recording.keys() and len([element for element in wantedTags if element in Tags[model]]) >= minTags:
                         model = int(model)
                         modelDict[model]['condition'] = 'tags'
