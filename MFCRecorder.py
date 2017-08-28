@@ -12,7 +12,6 @@ blacklist = Config.get('paths', 'blacklist')
 interval = int(Config.get('settings', 'checkInterval'))
 directory_structure = Config.get('paths', 'directory_structure').lower()
 postProcessingCommand = Config.get('settings', 'postProcessingCommand')
-
 filter = {
     'minViewers': int(Config.get('settings', 'minViewers')),
     'viewers': int(Config.get('AutoRecording', 'viewers')),
@@ -32,6 +31,7 @@ except ValueError:
     pass
 completed_directory = Config.get('paths', 'completed_directory').lower()
 
+
 online = []
 if not os.path.exists("{path}".format(path=save_directory)):
     os.makedirs("{path}".format(path=save_directory))
@@ -39,6 +39,11 @@ if not os.path.exists("{path}".format(path=save_directory)):
 # global variables
 recording = {}
 modelDict = {}
+
+# get hls video servers
+result = requests.get('http://www.myfreecams.com/_js/serverconfig.js').text
+result = json.loads(result)
+filter['servers'] = result['h5video_servers'].keys()
 
 
 def recordModel(model, now):
@@ -90,7 +95,7 @@ def getOnlineModels():
     client = Client(loop)
     def query():
         try:
-            MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value)
+            MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value and str(m.bestsession['camserv']) in filter['servers'])
             now = int(time.time())
             for model in MFConline:
                 modelDict[model.bestsession['uid']] = model.bestsession
