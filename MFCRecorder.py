@@ -54,18 +54,18 @@ def recordModel(model, now):
             if filter['minViewers'] and session['rc'] < filter['minViewers']:
                 return False
             else:
-                session['condition'] = 'wanted'
+                session['condition'] = ''
                 return True
         if session['uid'] in filter['blacklisted']:
             return False
         if filter['newerThanHours'] and session['creation'] > now - filter['newerThanHours'] * 60 * 60:
-            session['condition'] = 'newerThanHours'
+            session['condition'] = 'NEW_'
             return True
         if filter['viewers'] and session['rc'] > filter['viewers']:
-            session['condition'] = 'viewers'
+            session['condition'] = 'VIEWERS_'
             return True
         if filter['score'] and session['camscore'] > filter['score']:
-            session['condition'] = 'score'
+            session['condition'] = 'SCORE_'
             return True
         return False
     if check():
@@ -99,7 +99,7 @@ def getOnlineModels():
             now = int(time.time())
             for model in MFConline:
                 modelDict[model.bestsession['uid']] = model.bestsession
-                if model.bestsession['uid'] not in recording:
+                if model.bestsession['uid'] not in recording.keys() and model.bestsession['nm'] not in recording.values():
                     recordModel(model, now)
         except:client.disconnect()
 
@@ -119,7 +119,7 @@ def getOnlineModels():
                     Tags[model] = [x.strip().lower() for x in Tags[model]]
                     if int(model) not in recording.keys() and len([element for element in wantedTags if element in Tags[model]]) >= minTags:
                         model = int(model)
-                        modelDict[model]['condition'] = 'tags'
+                        modelDict[model]['condition'] = 'TAGS_'
                         thread = threading.Thread(target=startRecording, args=(modelDict[model],))
                         thread.start()
                 except KeyError:
@@ -152,7 +152,7 @@ def startRecording(model):
         filePath = directory_structure.format(path=save_directory, model=model['nm'], uid=model['uid'],
                                               seconds=now.strftime("%S"), day=now.strftime("%d"),
                                               minutes=now.strftime("%M"), hour=now.strftime("%H"),
-                                              month=now.strftime("%m"), year=now.strftime("%Y"))
+                                              month=now.strftime("%m"), year=now.strftime("%Y"), auto=model['condition'])
         directory = filePath.rsplit('/', 1)[0]+'/'
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -164,16 +164,14 @@ def startRecording(model):
                     f.write(data)
                 except:
                     f.close()
-                    recording.pop(model['uid'], None)
 
-            recording.pop(model['uid'], None)
             if postProcessingCommand != "":
                 processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
             elif completed_directory != "":
                 finishedDir = completed_directory.format(path=save_directory, model=model, uid=model['uid'],
                                                          seconds=now.strftime("%S"), minutes=now.strftime("%M"),
                                                          hour=now.strftime("%H"), day=now.strftime("%d"),
-                                                         month=now.strftime("%m"), year=now.strftime("%Y"))
+                                                         month=now.strftime("%m"), year=now.strftime("%Y"), auto=model['condition'])
                 if not os.path.exists(finishedDir):
                     os.makedirs(finishedDir)
                 os.rename(filePath, finishedDir+'/'+filePath.rsplit('/', 1)[1])
