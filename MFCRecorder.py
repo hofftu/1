@@ -36,7 +36,6 @@ online = []
 if not os.path.exists("{path}".format(path=save_directory)):
     os.makedirs("{path}".format(path=save_directory))
 
-# global variables
 recording = {}
 modelDict = {}
 
@@ -158,16 +157,18 @@ def startRecording(model):
             os.makedirs(directory)
         with open(filePath, 'wb') as f:
             minViewers = filter['autoStopViewers'] if model['condition'] == 'viewers' else filter['stopViewers']
-            while modelDict[model['uid']]['rc'] >= minViewers:
+            attempt = 1
+            while modelDict[model['uid']]['rc'] >= minViewers and attempt <= 3:
                 try:
                     data = fd.read(1024)
                     f.write(data)
                 except:
-                    f.close()
+                    attempt += 1
+            f.close()
 
-            if postProcessingCommand != "":
+            if postProcessingCommand:
                 processingQueue.put({'model':model['nm'], 'path': filePath, 'uid':model['uid']})
-            elif completed_directory != "":
+            elif completed_directory:
                 finishedDir = completed_directory.format(path=save_directory, model=model, uid=model['uid'],
                                                          seconds=now.strftime("%S"), minutes=now.strftime("%M"),
                                                          hour=now.strftime("%H"), day=now.strftime("%d"),
@@ -175,7 +176,6 @@ def startRecording(model):
                 if not os.path.exists(finishedDir):
                     os.makedirs(finishedDir)
                 os.rename(filePath, finishedDir+'/'+filePath.rsplit('/', 1)[1])
-                return
 
     finally:
         recording.pop(model['uid'], None)
@@ -197,7 +197,7 @@ def postProcess():
 
 
 if __name__ == '__main__':
-    if postProcessingCommand != "":
+    if postProcessingCommand:
         processingQueue = Queue()
         postprocessingWorkers = []
         for i in range(0, postProcessingThreads):
