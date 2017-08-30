@@ -168,6 +168,7 @@ def startRecording(model):
                 try:
                     data = fd.read(1024)
                     f.write(data)
+                    attempt = 1
                 except:
                     attempt += 1
             f.close()
