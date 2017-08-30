@@ -88,7 +88,7 @@ In the config file you can specify conditions in which models who are not in the
 
 **minTags**: indicates the minimum number of tags from the "Tags" option which must be met to start recording a model.
 
-**newerTahHours**: If a model has joined the site in less than the number of hours specified here, the model will be recorded until she has been a model for longer than this time (it will continue to record any active recording started prior to this time).
+**newerThanHours**: If a model has joined the site in less than the number of hours specified here, the model will be recorded until she has been a model for longer than this time (it will continue to record any active recording started prior to this time).
 
 **score**: any model with a camscore greater than this number will be recorded
 
