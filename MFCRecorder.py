@@ -1,8 +1,12 @@
-import time, datetime, os, threading, sys, asyncio, configparser, subprocess, requests, json
+import time, datetime, os, threading, sys, asyncio, configparser, subprocess, requests, gevent
+# Import ctypes if windows
+if os.name == 'nt': #sys.platform == 'win32':
+    import ctypes
+    kernel32 = ctypes.windll.kernel32
+    kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 from livestreamer import Livestreamer
 from queue import Queue
 from mfcauto import Client, Model, FCTYPE, STATE
-
 
 Config = configparser.ConfigParser()
 Config.read(sys.path[0] + "/config.conf")
@@ -40,8 +44,7 @@ recording = {}
 modelDict = {}
 
 # get hls video servers
-result = requests.get('http://www.myfreecams.com/_js/serverconfig.js').text
-result = json.loads(result)
+result = requests.get('http://www.myfreecams.com/_js/serverconfig.js').json()
 filter['servers'] = result['h5video_servers'].keys()
 
 
@@ -73,6 +76,10 @@ def recordModel(model, now):
         return True
 
 def getOnlineModels():
+    ######testing timeout
+    timeout = gevent.Timeout(5)
+    timeout.start()
+    ######end testing######
     wanted = []
     with open(wishlist) as f:
         models = list(set(f.readlines()))
@@ -111,8 +118,7 @@ def getOnlineModels():
             for name in ["respkey", "type", "opts", "serv"]:
                 if name in p.smessage:
                     url += "{}={}&".format(name, p.smessage.setdefault(name, None))
-            result = requests.get(url).text
-            Tags = json.loads(result)['rdata']
+            Tags  = requests.get(url).json()['rdata']
             for model in Tags.keys():
                 try:
                     Tags[model] = [x.strip().lower() for x in Tags[model]]
@@ -158,7 +164,7 @@ def startRecording(model):
         with open(filePath, 'wb') as f:
             minViewers = filter['autoStopViewers'] if model['condition'] == 'viewers' else filter['stopViewers']
             attempt = 1
-            while modelDict[model['uid']]['rc'] >= minViewers and attempt <= 3:
+            while modelDict[model['uid']]['rc'] >= minViewers and attempt <= 5:
                 try:
                     data = fd.read(1024)
                     f.write(data)
