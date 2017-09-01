@@ -141,6 +141,9 @@ This script will encode and merge recordings from individual models.
 
 **-c, --copy**: Only copies the video files instead of encoding them, but still merges them beforehand
 
+**-r, --remove**: Deletes video when detected as faulty when trying to merge videos, otherwise the file will just be ignored
+
+
 
 #### NOTES
 
