@@ -1,13 +1,15 @@
-#created GitHub user sKanoodle
-
 #!/usr/bin/env python3
-import os, subprocess, argparse, time
+#created GitHub user sKanoodle
+import os, subprocess, argparse, time, re
 from datetime import datetime, timedelta
 
 #directory with model ID subdirectories
 sourcefolder = "/home/user/MFC/src"
 #directory to save the encoded files in
 destinationfolder = "/home/user/MFC/encoded"
+#creation date regex (works for default file names, if changed in config change here as well)
+#is applied to the whole path, so custom folders (for example for the year) are possible here
+creationregex = '(?P<year>\d{4}).(?P<month>\d{2}).(?P<day>\d{2})_(?P<hour>\d{2})\.(?P<minute>\d{2})\.(?P<second>\d{2})'
 #logfile path (leave as empty string if no logging is desired)
 logfilepath = "/home/user/MFC/encoding.log"
 #{0} is the absoulte source file path, {1} is the absolute target file path
@@ -23,6 +25,7 @@ concatmaxtime = 60
 #time in minutes that has to have passed since the last modification of a recording to include it for encoding
 #(should always be larger than concatmaxtime, otherwise the file will be encoded even if a next file would have been eligible to be concatinated to it)
 ignorefreshvideostime = 60
+#datetime format for logging purposes
 datetimeformat = "{:%Y-%m-%d %X}"
 
 parser = argparse.ArgumentParser()
@@ -65,9 +68,12 @@ def get_file_encoding_infos(sourcepath):
         "length": get_video_length_seconds(sourcepath)}
 
 def parse_creation_time(path):
-    for name in ['NEW_', 'VIEWERS_', 'TAGS_', 'SCORE_']:
-        path = path.replace(name, '')
-    return datetime.strptime(os.path.basename(path)[:19], "%Y.%m.%d_%H.%M.%S")
+    m = re.search(creationregex, path)
+    if not m:
+        print('error in creation date regex')
+        return
+    dict = {k:int(v) for k, v in m.groupdict().items()}
+    return datetime(dict['year'], dict['month'], dict['day'], dict['hour'], dict['minute'], dict['second'])
 
 def calculate_eta(starttime, progress):
     if progress <= 0:
