@@ -104,6 +104,8 @@ In the config file you can specify conditions in which models who are not in the
 User submitted scripts can be found in the 'scripts' directory. These are not scripts which are created by me (beaston02), but other users who are sharing with the comunity.
 
 ## merge.py
+Created by [sKanoodle](https://github.com/sKanoodle)
+
 This script will encode and merge recordings from individual models.
 
 #### SETTINGS
