@@ -95,3 +95,44 @@ In the config file you can specify conditions in which models who are not in the
 **viewers**: when a model reachest this number of viewers in her chatroom, she will be recorded. This can be used to catch models as many users are entering the chat which usually indicates some sort of show has started.
 
 **autoStopViewers**: This only apples to models who are being recorded based on the viewers condition above. The session will stop recording when the number of viewers drops below this number. Make sure there is enough of a difference between these two numbers (viewers and autoStopViewers) to avoid the show continuously starting and stopping as the number of viewers moves above/below these numbers.
+
+
+
+
+#User Submitted Scripts
+
+User submitted scripts can be found in the 'scripts' directory. These are not scripts which are created by me (beaston02), but other users who are sharing with the comunity.
+
+##merge.py
+This script will encode and merge recordings from individual models.
+
+####SETTINGS
+
+**sourcefolder**: directory with model ID subdirectories
+
+**destinationfolder**: directory to save the encoded files in
+
+**logfilepath**: logfile path (leave as empty string if no logging is desired)
+
+**ffmpegcommand**: {0} is the absoulte source file path, {1} is the absolute target file path
+
+**extension**: extension of the encoded file
+
+**ffmpegmergecommand**: {0} is the absolute path of the file with parts to concat, {1} is the absolute target file path
+
+**tmpconcatfilename**: name to use for the temp file. filename must not exist already directly in the sourcefolder
+
+**concatmaxtime**: max time in minutes that is allowed between the end of a video and the beginning of the next video to concatinate them
+
+**ignorefreshvideostime**: time in minutes that has to have passed since the last modification of a recording to include it for encoding. (should always be larger than concatmaxtime, otherwise the file will be encoded even if a next file would have been eligible to be concatinated to it)
+
+**datetimeformat**: format of time and date in the file names
+
+
+
+####OPTIONS
+
+**-d, --dryrun**: Simulates encoding of all files in the source folder. Size and duration of some videos might differ, because there is no concatination performed, although the status output expects concatinated videos. It will therefore only show size and duration of the first file that should be concatinated
+
+
+**-c, --copy**: Only copies the video files instead of encoding them, but still merges them beforehand
