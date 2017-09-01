@@ -138,3 +138,28 @@ This script will encode and merge recordings from individual models.
 
 
 **-c, --copy**: Only copies the video files instead of encoding them, but still merges them beforehand
+
+
+#### NOTES
+
+only tested on linux.
+Can be ran as a cron job to automatically merge and encode files. Encoding should reduce the size of the files
+
+## symlink.py
+Created by [sKanoodle](https://github.com/sKanoodle)
+
+#### SETTINGS
+
+**models**: a dictionary where the keys are the models UIDs, and the values are their usernames.
+
+**encodedfilesdir**: the directory containing the recorded videos
+
+**symlinkdir**: the directory where you want the recordings to be linked to using the models name instead of their UID as the directory name.
+
+**wantedfile**: the path to the wanted file used by MFCRecorder.
+
+#### NOTES
+
+This script will create a symlink for the models UID directories to a directory using the models name. This will make it easier to browse through the recorded files by having directories named after the models instead of their UIDs, while still keeping all of their recordings in a single directory if/when the model changes her display name.
+
+Only tested on linux
