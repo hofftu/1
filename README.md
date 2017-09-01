@@ -114,6 +114,8 @@ This script will encode and merge recordings from individual models.
 
 **destinationfolder**: directory to save the encoded files in
 
+**creationregex**: regex for parsing creation date and time from filename
+
 **logfilepath**: logfile path (leave as empty string if no logging is desired)
 
 **ffmpegcommand**: {0} is the absoulte source file path, {1} is the absolute target file path
