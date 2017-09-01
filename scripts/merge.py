@@ -31,6 +31,7 @@ datetimeformat = "{:%Y-%m-%d %X}"
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--dryrun", action="store_true", dest="dryrun", help="Simulates encoding of all files in the source folder. Size and duration of some videos might differ, because there is no concatination performed, although the status output expects concatinated videos. It will therefore only show size and duration of the first file that should be concatinated.")
 parser.add_argument("-c", "--copy", action="store_true", dest="copy", help="Only copies the video files instead of encoding them, but still merges them beforehand.")
+parser.add_argument("-r", "--remove", action="store_true", dest="remove", help="Deletes video when detected as faulty when trying to merge videos, otherwise the file will just be ignored")
 args = parser.parse_args()
 
 def log_and_print(string):
@@ -48,8 +49,8 @@ def format_seconds(totalseconds):
 def get_video_length_seconds(path):
     if not os.path.exists(path):
         return 0
-    lengthraw = subprocess.check_output("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {0}".format(path), shell=True)
     try:
+        lengthraw = subprocess.check_output("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {0}".format(path), shell=True)
         return float(lengthraw.strip())
     except:
         return 0
@@ -119,8 +120,18 @@ def merge_files_in_model_directory(directory):
         filepath = os.path.join(directory, file)
         if not file.endswith(".mp4"):
             continue
+        #detects empty files
+        length = get_video_length_seconds(filepath)
+        if not length:
+            if args.remove:
+                log_and_print("removing empty or faulty video file: {}".format(filepath))
+                os.remove(filepath)
+            else:
+                log_and_print("ignoring empty or faulty video file: {}".format(filepath))
+            continue
         entries.append({"creation": parse_creation_time(file),
             "modification": datetime.fromtimestamp(os.path.getmtime(filepath)),
+            "length": length,
             "file": filepath})
 
     #now we can traverse the files we found and check if the next file is directly following the previous and merge them if necessary
