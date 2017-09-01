@@ -99,14 +99,14 @@ In the config file you can specify conditions in which models who are not in the
 
 
 
-#User Submitted Scripts
+# User Submitted Scripts
 
 User submitted scripts can be found in the 'scripts' directory. These are not scripts which are created by me (beaston02), but other users who are sharing with the comunity.
 
-##merge.py
+## merge.py
 This script will encode and merge recordings from individual models.
 
-####SETTINGS
+#### SETTINGS
 
 **sourcefolder**: directory with model ID subdirectories
 
@@ -130,7 +130,7 @@ This script will encode and merge recordings from individual models.
 
 
 
-####OPTIONS
+#### OPTIONS
 
 **-d, --dryrun**: Simulates encoding of all files in the source folder. Size and duration of some videos might differ, because there is no concatination performed, although the status output expects concatinated videos. It will therefore only show size and duration of the first file that should be concatinated
 
