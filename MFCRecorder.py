@@ -1,13 +1,12 @@
-import time, datetime, os, threading, sys, asyncio, configparser, subprocess, requests, gevent
-# Import ctypes if windows
-if os.name == 'nt': #sys.platform == 'win32':
+import time, datetime, os, threading, sys, configparser, subprocess, blessings, pickle
+if os.name == 'nt':
     import ctypes
     kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 from livestreamer import Livestreamer
 from queue import Queue
-from mfcauto import Client, Model, FCTYPE, STATE
 
+term = blessings.Terminal()
 Config = configparser.ConfigParser()
 Config.read(sys.path[0] + "/config.conf")
 save_directory = Config.get('paths', 'save_directory')
@@ -36,20 +35,14 @@ except ValueError:
 completed_directory = Config.get('paths', 'completed_directory').lower()
 
 
-online = []
 if not os.path.exists("{path}".format(path=save_directory)):
     os.makedirs("{path}".format(path=save_directory))
 
 recording = {}
 modelDict = {}
 
-# get hls video servers
-result = requests.get('http://www.myfreecams.com/_js/serverconfig.js').json()
-filter['servers'] = result['h5video_servers'].keys()
-
-
 def recordModel(model, now):
-    session = model.bestsession
+    session = model
 
     def check():
         if session['uid'] in filter['wanted']:
@@ -69,6 +62,11 @@ def recordModel(model, now):
         if filter['score'] and session['camscore'] > filter['score']:
             session['condition'] = 'SCORE_'
             return True
+        if filter['wantedTags'] and filter['minTags']:
+            session['tags'] = [x.strip().lower() for x in session['tags']]
+            if len([element for element in filter['wantedTags'] if element in session['tags']]) >= filter['minTags']:
+                session['condition'] = 'TAGS_'
+                return True
         return False
     if check():
         thread = threading.Thread(target=startRecording, args=(session,))
@@ -76,72 +74,42 @@ def recordModel(model, now):
         return True
 
 def getOnlineModels():
-    ######testing timeout
-    timeout = gevent.Timeout(5)
-    timeout.start()
-    ######end testing######
-    wanted = []
+    global models
+    filter['wanted'] = []
     with open(wishlist) as f:
         models = list(set(f.readlines()))
         for theModel in models:
-            wanted.append(int(theModel))
+            filter['wanted'].append(int(theModel))
     f.close()
-    blacklisted = []
+    filter['blacklisted'] = []
     if blacklist:
         with open(blacklist) as f:
             models = list(set(f.readlines()))
             for theModel in models:
-                blacklisted.append(int(theModel))
+                filter['blacklisted'].append(int(theModel))
         f.close()
-    filter['wanted'] = wanted
-    filter['blacklisted'] = blacklisted
+    Config.read(sys.path[0] + "/config.conf")
+    filter['minTags'] = int(Config.get('AutoRecording', 'minTags'))
+    filter['wantedTags'] = [x.strip().lower() for x in Config.get('AutoRecording', 'tags').split(',')]
+    timeout = 5
+    p = subprocess.Popen([sys.executable, sys.path[0] + "/getModels.py"])
+    t = 0
+    while t < timeout and p.poll() is None:
+        time.sleep(1)
+        t += 1
+    if p.poll() is None:
+        p.terminate()
+        print('connection failed')
+    else:
+        with open('models.pickle', 'rb') as handle:
+            models = pickle.load(handle)
+        now = int(time.time())
+        for model in models['online']:
+            modelDict[model['uid']] = model
+            if model['uid'] not in recording.keys() and model['nm'] not in recording.values():
+                recordModel(model, now)
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    client = Client(loop)
-    def query():
-        try:
-            MFConline = Model.find_models(lambda m: m.bestsession["vs"] == STATE.FreeChat.value and str(m.bestsession['camserv']) in filter['servers'])
-            now = int(time.time())
-            for model in MFConline:
-                modelDict[model.bestsession['uid']] = model.bestsession
-                if model.bestsession['uid'] not in recording.keys() and model.bestsession['nm'] not in recording.values():
-                    recordModel(model, now)
-        except:client.disconnect()
 
-    def checkTags(p):
-        Config.read(sys.path[0] + "/config.conf")
-        minTags = int(Config.get('AutoRecording', 'minTags'))
-        wantedTags = [x.strip().lower() for x in Config.get('AutoRecording', 'tags').split(',')]
-        if wantedTags and minTags and p.smessage['msg']['arg2'] == 20:
-            url = "http://www.myfreecams.com/php/FcwExtResp.php?"
-            for name in ["respkey", "type", "opts", "serv"]:
-                if name in p.smessage:
-                    url += "{}={}&".format(name, p.smessage.setdefault(name, None))
-            Tags  = requests.get(url).json()['rdata']
-            for model in Tags.keys():
-                try:
-                    Tags[model] = [x.strip().lower() for x in Tags[model]]
-                    if int(model) not in recording.keys() and len([element for element in wantedTags if element in Tags[model]]) >= minTags:
-                        model = int(model)
-                        modelDict[model]['condition'] = 'TAGS_'
-                        thread = threading.Thread(target=startRecording, args=(modelDict[model],))
-                        thread.start()
-                except KeyError:
-                    pass
-
-            client.disconnect()
-        elif not wantedTags or not minTags:
-            client.disconnect()
-
-    client.on(FCTYPE.CLIENT_MODELSLOADED, query)
-    client.on(FCTYPE.EXTDATA, lambda p: checkTags(p))
-    try:
-        loop.run_until_complete(client.connect())
-        loop.run_forever()
-    except:
-        pass
-    loop.close()
 
 
 def startRecording(model):
@@ -193,17 +161,18 @@ def postProcess():
         while processingQueue.empty():
             time.sleep(1)
         parameters = processingQueue.get()
-        print("got parameters")
         model = parameters['model']
         path = parameters['path']
         filename = path.rsplit('/', 1)[1]
         uid = str(parameters['uid'])
         directory = path.rsplit('/', 1)[0]+'/'
-        print(postProcessingCommand.split() + [path, filename, directory, model, uid])
         subprocess.call(postProcessingCommand.split() + [path, filename, directory, model, uid])
 
 
 if __name__ == '__main__':
+    for line in range(term.height):
+        with term.location(0, line):
+            sys.stdout.write("\033[K")
     if postProcessingCommand:
         processingQueue = Queue()
         postprocessingWorkers = []
@@ -211,27 +180,21 @@ if __name__ == '__main__':
             t = threading.Thread(target=postProcess)
             postprocessingWorkers.append(t)
             t.start()
-    print("____________________Connection Status____________________")
     while True:
+        term.move(0,0)
         getOnlineModels()
-        sys.stdout.write("\033[F")
-        sys.stdout.write("\033[K")
-        sys.stdout.write("\033[F")
-        sys.stdout.write("\033[K")
-        sys.stdout.write("\033[F")
-        sys.stdout.write("\033[F")
-        print()
-        print()
-        print("Disconnected:")
-        print("Waiting for next check")
-        print("____________________Recording Status_____________________")
+        with term.location(0,1):
+            sys.stdout.write("\033[K")
+            print("Disconnected:")
+            sys.stdout.write("\033[K")
+            print("Waiting for next check")
+        with term.location(0,3):
+            print("____________________Recording Status_____________________")
         for i in range(interval, 0, -1):
-            sys.stdout.write("\033[K")
-            print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
-            sys.stdout.write("\033[K")
-            print("the following models are being recorded: {}".format(list(recording.values())), end="\r")
-            time.sleep(1)
-            sys.stdout.write("\033[F")
-        sys.stdout.write("\033[F")
-        sys.stdout.write("\033[F")
-        sys.stdout.write("\033[F")
+            with term.location(0,4):
+                sys.stdout.write("\033[K")
+                print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
+                sys.stdout.write("\033[K")
+                print("the following models are being recorded: {}".format(list(recording.values())), end="\r")
+                term.clear_eos()
+                time.sleep(1)
