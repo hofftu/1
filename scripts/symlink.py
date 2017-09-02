@@ -1,6 +1,5 @@
-#created by sKanoodle on GitHub
-
 #!/usr/bin/env python
+#created by sKanoodle on GitHub
 import os, sys
 
 models = {123: "name1",
