@@ -1,16 +1,22 @@
-import asyncio, requests, pickle, sys, os, blessings
+import asyncio, requests, pickle, sys, os
 from mfcauto import Client, Model, FCTYPE, STATE
 if os.name == 'nt':
     import ctypes
     kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
-
-term = blessings.Terminal()
+else:
+    import blessings
+try:
+    term = blessings.Terminal()
+except:
+    term = False
 result = requests.get('http://www.myfreecams.com/_js/serverconfig.js').json()
 servers = result['h5video_servers'].keys()
 models = {'online':[]}
+
 def getOnlineModels():
-    term.move(0, 2)
+    if term:
+        term.move(0, 2)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     client = Client(loop)
@@ -51,7 +57,12 @@ def getOnlineModels():
         pickle.dump(models, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 if __name__ == '__main__':
-    with term.location(0,0):
+    if term:
+        with term.location(0,0):
+            sys.stdout.write("\033[K")
+            sys.stdout.write("\033[F")
+            print("____________________Connection Status____________________")
+    else:
         sys.stdout.write("\033[K")
         sys.stdout.write("\033[F")
         print("____________________Connection Status____________________")
