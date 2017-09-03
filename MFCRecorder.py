@@ -1,12 +1,18 @@
-import time, datetime, os, threading, sys, configparser, subprocess, blessings, pickle
+import time, datetime, os, threading, sys, configparser, subprocess, pickle
 if os.name == 'nt':
     import ctypes
     kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+else:
+    import blessings
 from livestreamer import Livestreamer
 from queue import Queue
 
-term = blessings.Terminal()
+try:
+    term = blessings.Terminal()
+except:
+    term = False
+term = False
 Config = configparser.ConfigParser()
 Config.read(sys.path[0] + "/config.conf")
 save_directory = Config.get('paths', 'save_directory')
@@ -170,9 +176,10 @@ def postProcess():
 
 
 if __name__ == '__main__':
-    for line in range(term.height):
-        with term.location(0, line):
-            sys.stdout.write("\033[K")
+    if term:
+        for line in range(term.height):
+            with term.location(0, line):
+                sys.stdout.write("\033[K")
     if postProcessingCommand:
         processingQueue = Queue()
         postprocessingWorkers = []
@@ -181,20 +188,34 @@ if __name__ == '__main__':
             postprocessingWorkers.append(t)
             t.start()
     while True:
-        term.move(0,0)
+        if term:
+            term.move(0,0)
         getOnlineModels()
-        with term.location(0,1):
+        if term:
+            with term.location(0,1):
+                sys.stdout.write("\033[K")
+                print("Disconnected:")
+                sys.stdout.write("\033[K")
+                print("Waiting for next check")
+            with term.location(0,3):
+                print("____________________Recording Status_____________________")
+            for i in range(interval, 0, -1):
+                with term.location(0,4):
+                    sys.stdout.write("\033[K")
+                    print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
+                    sys.stdout.write("\033[K")
+                    print("the following models are being recorded: {}".format(list(recording.values())), end="\r")
+                    term.clear_eos()
+                    time.sleep(1)
+        else:
             sys.stdout.write("\033[K")
             print("Disconnected:")
             sys.stdout.write("\033[K")
             print("Waiting for next check")
-        with term.location(0,3):
             print("____________________Recording Status_____________________")
         for i in range(interval, 0, -1):
-            with term.location(0,4):
-                sys.stdout.write("\033[K")
-                print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
-                sys.stdout.write("\033[K")
-                print("the following models are being recorded: {}".format(list(recording.values())), end="\r")
-                term.clear_eos()
-                time.sleep(1)
+            sys.stdout.write("\033[K")
+            print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
+            sys.stdout.write("\033[K")
+            print("the following models are being recorded: {}".format(list(recording.values())), end="\r")
+            time.sleep(1)
