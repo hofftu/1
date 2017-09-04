@@ -1,1 +1,0 @@
-models avatars will be saved to this directory. 
