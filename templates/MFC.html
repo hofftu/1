@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MFCRecorder</title>
+    <link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
+</head>
+<body>
+<div class="add-model">
+
+    <h1>Add Model</h1>
+    <form action="." method="POST">
+        <input type="text" name="text">
+        <input type="submit" name="my-form" value="Send">
+    </form>
+</div>
+<div id="statistics">
+    <h1>Statistics:</h1>
+    <ul class="stats-list">
+        <li>
+        <h3>Uptime</h3>
+        <h4>days:hours:minutes:seconds</h4>
+        <h4>{{ uptime.days }}:{{ uptime.hours }}:{{ uptime.minutes }}:{{ uptime.seconds }}</h4>
+        </li>
+        <li>
+        <h3>Free Space</h3>
+        <h4>{{ freeSpace }} GB</h4>
+        </li>
+        <li>
+        <h3>Total Downloaded (since last restart)</h3>
+        <h4>{{ totalData }} GB</h4>
+        </li>
+    </ul>
+</div>
+
+<div id="main">
+    <h1>{{ count }} models recording</h1>
+    <ul class="list">
+    {% for model in models %}
+        <li>
+        <a href="{{ 'http://profiles.myfreecams.com/'+model.nm }}" rel="noreferrer">{{ model.nm }}</a>
+        <a href="http://www.myfreecams.com/#{{ model.nm }}">
+        <img alt="{{ model.nm }}" class="png" height="250" src="{{ url_for('static', filename="avatars/")}}{{ model.uid }}.jpg" width="250">
+        </a>
+            <ul class="info">
+                <in class="condition">
+                    <h6>{{ model.condition }}</h6>
+                </in>
+                <in class="viewers">
+                    <h6>viewers: {{ model.rc }}</h6>
+                </in>
+        </ul>
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+
+</body>
+
+
+</body>
+</html>
