@@ -11,9 +11,9 @@ from subprocess import Popen, PIPE, call
 from colorama import Fore
 
 app = Flask(__name__)
-
+mainDir = sys.path[0]
 Config = configparser.ConfigParser()
-Config.read(os.path.dirname(sys.argv[0]) + "/config.conf")
+Config.read(mainDir + "/config.conf")
 save_directory = Config.get('paths', 'save_directory')
 wishlist = Config.get('paths', 'wishlist')
 blacklist = Config.get('paths', 'blacklist')
@@ -97,12 +97,13 @@ def recordModel(model, now):
         return False
     if check():
         # myfreecams blocks requests for the avatar image if they are referred from a site other than myfreecams.com so were going to download images to static folder
-        if not os.path.exists(os.path.dirname(sys.argv[0]) + "/static/avatars/{}.jpg".format(model['uid'])):
+        if not os.path.exists(mainDir + "/static/avatars/{}.jpg".format(model['uid'])):
             try:
                 response = requests.get(model['avatar'])
                 if response.status_code == 200:
-                    with open(os.path.dirname(sys.argv[0]) + "/static/avatars/{}.jpg".format(model['uid']), 'wb') as f:
+                    with open(mainDir + "/static/avatars/{}.jpg".format(model['uid']), 'wb') as f:
                         f.write(response.content)
+                        f.close()
             except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):pass
         thread = threading.Thread(target=startRecording, args=(session,))
         thread.start()
@@ -117,7 +118,7 @@ def getOnlineModels():
         models = list(set(f.readlines()))
         for theModel in models:
             filter['wanted'].append(int(theModel))
-    f.close()
+        f.close()
     filter['blacklisted'] = []
     if blacklist:
         with open(blacklist) as f:
@@ -125,12 +126,12 @@ def getOnlineModels():
             for theModel in models:
                 filter['blacklisted'].append(int(theModel))
         f.close()
-    Config.read(os.path.dirname(sys.argv[0]) + "/config.conf")
+    Config.read(mainDir + "/config.conf")
     filter['minTags'] = int(Config.get('AutoRecording', 'minTags'))
     filter['wantedTags'] = [x.strip().lower() for x in Config.get('AutoRecording', 'tags').split(',')]
     while True:
         timeout = 20
-        p = Popen([sys.executable, os.path.dirname(sys.argv[0]) + "/getModels.py"])
+        p = Popen([sys.executable, mainDir + "/getModels.py"])
         t = 0
         while t < timeout and p.poll() is None:
             time.sleep(1)
@@ -139,8 +140,9 @@ def getOnlineModels():
             p.terminate()
             print('connection failed')
         else:
-            with open(os.path.dirname(sys.argv[0]) + '/models.pickle', 'rb') as handle:
+            with open(mainDir + '/models.pickle', 'rb') as handle:
                 models = pickle.load(handle)
+                handle.close()
             now = int(time.time())
             for model in models['online']:
                 modelDict[model['uid']] = model
@@ -219,7 +221,7 @@ def home():
 @app.route('/', methods=['POST'])
 def parse_data():
     data = request.form['text']
-    p = Popen([sys.executable, os.path.dirname(sys.argv[0]) + "/add.py", data], stdout=PIPE)
+    p = Popen([sys.executable, mainDir + "/add.py", data], stdout=PIPE)
     out = p.communicate()
     if 'has been added to the list' in str(out):
         return str('{} has been added to the wanted list'.format(data))
