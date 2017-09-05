@@ -8,6 +8,7 @@ from livestreamer import Livestreamer
 from queue import Queue
 from flask import Flask, render_template, request
 from subprocess import Popen, PIPE, call
+from colorama import Fore
 
 app = Flask(__name__)
 
@@ -46,6 +47,7 @@ if not os.path.exists("{path}".format(path=save_directory)):
 recording = {}
 modelDict = {}
 uptime = {}
+models={}
 startTime = int(time.time())
 totalData = 0
 
@@ -101,10 +103,11 @@ def recordModel(model, now):
                 if response.status_code == 200:
                     with open(os.path.dirname(sys.argv[0]) + "/static/avatars/{}.jpg".format(model['uid']), 'wb') as f:
                         f.write(response.content)
-            except requests.exceptions.ConnectionError:pass
+            except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):pass
         thread = threading.Thread(target=startRecording, args=(session,))
         thread.start()
-        print('starting capture of model: {}  condition: {}'.format(model['nm'], session['condition']))
+        print(Fore.GREEN + 'starting capture of model: {}  condition: {}'.format(model['nm'], session['condition']) + Fore.RESET) if model['condition']\
+            else print(Fore.GREEN +'starting capture of model: {}  condition: wanted'.format(model['nm']) + Fore.RESET)
         return True
 
 def getOnlineModels():
@@ -125,25 +128,27 @@ def getOnlineModels():
     Config.read(os.path.dirname(sys.argv[0]) + "/config.conf")
     filter['minTags'] = int(Config.get('AutoRecording', 'minTags'))
     filter['wantedTags'] = [x.strip().lower() for x in Config.get('AutoRecording', 'tags').split(',')]
-    timeout = 5
-    p = Popen([sys.executable, os.path.dirname(sys.argv[0]) + "/getModels.py"])
-    t = 0
-    while t < timeout and p.poll() is None:
-        time.sleep(1)
-        t += 1
-    if p.poll() is None:
-        p.terminate()
-        print('connection failed')
-    else:
-        with open(os.path.dirname(sys.argv[0]) + '/models.pickle', 'rb') as handle:
-            models = pickle.load(handle)
-        now = int(time.time())
-        for model in models['online']:
-            modelDict[model['uid']] = model
-            if model['uid'] not in recording.keys():
-                recordModel(model, now)
-            else:
-                recording[model['uid']]['rc'] = model['rc']
+    while True:
+        timeout = 20
+        p = Popen([sys.executable, os.path.dirname(sys.argv[0]) + "/getModels.py"])
+        t = 0
+        while t < timeout and p.poll() is None:
+            time.sleep(1)
+            t += 1
+        if p.poll() is None:
+            p.terminate()
+            print('connection failed')
+        else:
+            with open(os.path.dirname(sys.argv[0]) + '/models.pickle', 'rb') as handle:
+                models = pickle.load(handle)
+            now = int(time.time())
+            for model in models['online']:
+                modelDict[model['uid']] = model
+                if model['uid'] not in recording.keys():
+                    recordModel(model, now)
+                else:
+                    recording[model['uid']]['rc'] = model['rc']
+            break
 
 def startRecording(model):
     global totalData
@@ -165,15 +170,13 @@ def startRecording(model):
             os.makedirs(directory)
         with open(filePath, 'wb') as f:
             minViewers = filter['autoStopViewers'] if model['condition'] == 'viewers' else filter['stopViewers']
-            attempt = 1
-            while modelDict[model['uid']]['rc'] >= minViewers and attempt <= 5:
+            while modelDict[model['uid']]['rc'] >= minViewers:
                 try:
                     data = fd.read(1024)
                     f.write(data)
                     totalData += 1024
-                    attempt = 1
                 except:
-                    attempt += 1
+                    break
             f.close()
 
             if postProcessingCommand:
@@ -189,7 +192,7 @@ def startRecording(model):
 
     finally:
         recording.pop(model['uid'], None)
-        print("{}'s session has ended".format(model['nm']))
+        print(Fore.RED + "{}'s session has ended".format(model['nm']) + Fore.RESET)
 
 
 def postProcess():
@@ -245,8 +248,7 @@ if __name__ == '__main__':
             t.start()
     while True:
         getOnlineModels()
-        print("Disconnected:")
-        print("Waiting for next check")
+        print("Disconnected: Found " + Fore.BLUE + str(len(models['online'])) + Fore.RESET + " models in public chat")
         print("____________________Recording Status_____________________")
         print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), interval))
         print("the following models are being recorded: {}".format([recording[x]['nm'] for x in recording.keys()]))
