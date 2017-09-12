@@ -171,7 +171,7 @@ def startRecording(model):
         if not os.path.exists(directory):
             os.makedirs(directory)
         with open(filePath, 'wb') as f:
-            minViewers = filter['autoStopViewers'] if model['condition'] == 'viewers' else filter['stopViewers']
+            minViewers = filter['autoStopViewers'] if model['condition'] == 'VIEWERS_' else filter['stopViewers']
             while modelDict[model['uid']]['rc'] >= minViewers:
                 try:
                     data = fd.read(1024)
