@@ -63,7 +63,7 @@
             <a title="add {{ model.nm }} to wanted list" class="add-button" href="{{ url_for('home') }}?addUID={{ model.uid }}">add</a>
             {% endif %}
             <a title="view {{ model.nm }}'s profile" class="model-name" href="{{ 'http://profiles.myfreecams.com/'+model.nm }}" rel="noreferrer">{{ model.nm }}</a>
-            <a title="add {{ model.nm }} from blacklist" class="block" href="{{ url_for('home') }}?blockUID={{ model.uid }}">block</a>
+            <a title="add {{ model.nm }} to blacklist" class="block" href="{{ url_for('home') }}?blockUID={{ model.uid }}">block</a>
         </ul>
         <a title="open {{ model.nm }}'s chatroom" href="http://www.myfreecams.com/#{{ model.nm }}">
         <img alt="{{ model.nm }}" class="png" height="250" src="{{ url_for('static', filename="avatars/")}}{{ model.uid }}.jpg" width="250">
