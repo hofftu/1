@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MFCRecorder - config</title>
+    <link rel="stylesheet" href="/static/config.css" type="text/css" media="all">
+</head>
+<body>
+<div class="home">
+    <a class="home" href="/MFC">Home</a>
+</div>
+<div>
+<form action="/" method="POST">
+  <br> <br>
+<h1 class="section">[paths]</h1>
+<br>
+    <a>Set the path to the wishlist file <br></a>
+<label for="wishlist">wishlist</label>
+<input type="text" name="wishlist" value="{{ settings.wishlist }}" size="100"><br>
+    <a>Set the path to the directory where the recordings will be saved<br></a>
+<label for="save_directory">save_directory</label>
+<input type="text" name="save_directory" value="{{ settings.save_directory }}" size="100"><br>
+    <a>(OPTIONAL) Set the path to the blacklist file (this models wont record unless they are also in the wishlist)<br></a>
+<label for="blacklist">blacklist</label>
+<input type="text" name="blacklist" value="{{ settings.blacklist }}" size="100"><br><br>
+    <a>set the directory structure - default is "{path}/{uid}/{year}.{month}.{day}_{hour}.{minutes}.{seconds}_{model}.mp4"<br>
+<strong>{auto}</strong>= for autoRecording conditions below, it is the reason why the recording was started followed by "_" - These are: <strong>TAGS_, VIEWERS_, SCORE_, and NEW_</strong>. If a model is in the wanted list, this will be blank<br>
+<strong>{path}</strong> = save_directory set above. (your directory structure should start with this)<br>
+<strong>{model}</strong> = the models name<br>
+<strong>{uid}</strong> = models uid or broadcaster id. This is a number which is always consistent. The models name can be changed, so this is what I find best for keeping all videos of a model in the same directory<br>
+<strong>"{year}, {month}, {day}, {hour}, {minutes}, {seconds}"</strong> should all be easy enough to figure out what these are<br>
+you can also change ".mp4" to another extension. ".ts" is what the stream is actual broadcast as.<br>
+example using a made up "hannah" who has the uid 208562: <strong>{path}/{uid}/{year}/{year}.{month}.{day}_{hour}.{minutes}.{seconds}_{model}.mp4 = "/Users/Joe/MFC/208562/2017/2017.07.26_19.34.47_hannah.mp4"</strong><br>
+This will also be the "Download directory" or temp directory if you set a "completed_directory"<br></a>
+<label for="directory_structure">directory_structure</label>
+<input type="text" name="directory_structure" value="{{ settings.directory_structure }}" size="100"><br>
+    <a>(OPTIONAL) Where the recordings will be moved to upon compleation. Leave blank to not move files after recording ends</a><br>
+<label for="completed_directory" size="100">completed_directory</label>
+<input type="text" name="completed_directory" value="{{ settings.completed_directory }}" size="100"><br>
+<br>
+<h1 class="section">[settings]</h1>
+    <a>The interval between checks in seconds</a><br>
+<label for="checkInterval">checkInterval</label>
+<input type="text" name="checkInterval" value="{{ settings.checkInterval }}" size="3"><br>
+    <a>(OPTIONAL) Recordings will stop if the available disk space drops below minSpace (in GB). Recordings will continue after space becomes available again</a>
+    <label for="minSpace">checkInterval</label>
+<input type="text" name="minSpace" value="{{ settings.minSpace }}" size="5"><br>
+    <a>(OPTIONAL) - leave blank if you dont want to run a post processing script on the files
+You can set a command to be ran on the file once it is completed. This can be any sort of a script you would like.
+You can create a script to convert the video via ffmpeg to make it compatible for certain devices, create a contact sheet of the video
+upload the video to a cloud storage drive via rclone, or whatever else you see fit.
+set the string to be the same as you you would type into terminal to call the script manually.
+The peramaters which will be passed to the script are as follows:<br>
+<strong>1</strong> = full file path (ie: /Users/Joe/MFC/208562/2017/2017.07.26_19.34.47_hannah.mp4)<br>
+<strong>2</strong> = filename (ie : 2017.07.26_19.34.47_hannah.mp4)<br>
+<strong>3</strong> = directory (ie : /Users/Joe/MFC/208562/hannah/2017/)<br>
+<strong>4</strong> = models name (ie: hannah)<br>
+<strong>5</strong> = uid (ie: 208562) (explained above)<br>
+to call a bash script called "MoveToGoogleDrive.sh" and located in the user Joes home directory, you would use:
+postProcessingCommand = "bash /Users/Joe/home/MoveToGoogleDrive.sh"
+this script will be ran on the files "download location" prior to it being moved to its "completed location".
+The moving of the file will not take place if a post processing script is ran, so if you want to move it once it is completed, do so through commands in the post processing script.</a><br>
+<label for="postProcessingCommand">postProcessingCommand</label>
+<input type="text" name="postProcessingCommand" value="{{ settings.postProcessingCommand }}" size="100"><br>
+    <a>(required if "postProcessingCommand" is set, otherwise it will be set to 1)<br>
+    Maximum number of files to run the post pocessing script on at a time</a><br>
+<label for="postProcessingThreads">postProcessingThreads</label>
+<input type="text" name="postProcessingThreads" value="{{ settings.postProcessingThreads }}" size="3"><br>
+    <a>(OPTIONAL) The minimum number of viewers a model must have before she will be recorded</a><br>
+<label for="minViewers">minViewers</label>
+<input type="text" name="minViewers" value="{{ settings.minViewers }}" size="6"><br>
+    <a>(required if "minViewers" is set, else its set to the same as minViewers) The recording will stop if the number of users viewing the model drops below this number</a><br>
+<label for="stopViewers">stopViewers</label>
+<input type="text" name="stopViewers" value="{{ settings.stopViewers }}" size="6"><br>
+<br>
+<h1 class="section">[AutoRecording]</h1>
+    <a>This section sets conditions in which a model will be recorded if they are not on the wishlist, and not on the blacklist</a><br><br>
+    <a>(OPTIONAL) Record If a model reaches this number of viewers</a><br>
+<label for="viewers">viewers</label>
+<input type="text" name="viewers" value="{{ settings.voewers }}" size="6"><br>
+    <a>(required if "viewers" above is set, else it is set to the same value as "viewers") Stop recording models started by "viewers" condition above if viewers drops below this number</a><br>
+<label for="autoStopViewers">autoStopViewers</label>
+<input type="text" name="autoStopViewers" value="{{ settings.autoStopViewers }}" size="6"><br>
+    <a>(OPTIONAL) Record model if her camscore is above this number</a><br>
+<label for="score">score</label>
+<input type="text" name="score" value="{{ settings.score }}" size="6"><br>
+    <a>(OPTIONAL) Record models who registered for the site less than this number of hours</a><br>
+<label for="newerThanHours">newerThanHours</label>
+<input type="text" name="newerThanHours" value="{{ settings.newerThanHours }}" size="6"><br>
+    <a>(OPTIONAL) A comma separated list of tags - Models meating minimum number of tags (set below with "minTags") will be recorded</a><br>
+<label for="tags">tags</label>
+<input type="text" name="tags" value="{{ settings.tags }}" size="100"><br>
+    <a>(OPTIONAL) The minimum number of tags from the "tags" setting above which must be met for a model to be recorded. Setting to 0 or leaving blank will disable recording by tags </a><br>
+<label for="minTags">minTags</label>
+<input type="text" name="minTags" value="{{ settings.minTags }}" size="4"><br>
+<br>
+<h1 class="section">[web]</h1>
+    <a>The port to use to connect to web interface (requires restart)</a><br>
+<label for="port">port</label>
+<input type="text" name="port" value="{{ settings.port }}" size="6"><br>
+<br>
+<input type="submit" value="Submit">
+
+</form>
+</div>
+</body>
+</html>
