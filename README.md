@@ -1,6 +1,6 @@
 # MFCRecorder
 
-This is script to automate the recording of public webcam shows from myfreecams. 
+This is script automates the recording of public webcam shows from myfreecams. 
 
 
 ## Requirements
@@ -13,7 +13,7 @@ and mfcauto.py (https://github.com/beaston02/mfcauto.py)
 to install required modules, run:
 ```
 python3.5 -m pip install -r requirements.txt
-python3.5 -m pip install --upgrade git+https://github.com/beaston02/mfcauto.py@master
+python3.5 -m pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
 ```
 
 ## Setup
