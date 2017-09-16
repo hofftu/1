@@ -1,21 +1,69 @@
+.add {
+	list-style: none;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+	display: table;
+	table-layout: fixed;
+}
+
+.add a form {
+	text-align: right;
+	font-family: "Arial Black", serif;
+	font-size: 30px;
+}
+
+.add a.stats {
+	text-align: left;
+	font-family: "Arial Black", serif;
+	font-size: 30px;
+}
+.add a {
+	text-align: center;
+	display: table-cell;
+	font-size: 20px;
+}
+
+input[type=text] {
+    padding: 12px 20px 12px;
+    display: inline-block;
+    border: 1px solid #080808;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
 h3 {
+	margin: 1px;
     font-family: "Arial Black", serif;
 }
 
 h4 {
+	margin: -1px 0 5px 0;
     font-size: 18px;
 }
 body {
     background: #949494;
 }
 .stats-list li {
+	padding: 0;
 	text-align: center;
 	display: table-cell;
+}
+div.config a {
+	width: 100%;
+	text-align: left;
+	display: table-cell;
+}
+
+div.config{
+	width: 100%;
+	list-style: none;
+	font-size: 25px;
+	text-align: right;
 }
 
 .stats-list {
     list-style: none;
-    margin: 0;
     padding: 0;
     overflow: hidden;
     width: 100%;
@@ -38,8 +86,8 @@ body {
     background: #f0f1f1;
     float: left;
     position: relative;
-    margin: 0 7px 7px 0;
-    border: 10px solid #acacac;
+    margin: 4px 7px 7px 0;
+    border: 5px solid #acacac;
     border-radius: 4px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
@@ -64,4 +112,99 @@ body {
 
 .viewers {
 	text-align: right;
+}
+
+.sort {
+	list-style: none;
+    top: 3px;
+    width: 100%;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 1%;
+    overflow: hidden;
+    font: .8666em/16px 'UbuntuMedium', Arial, Helvetica, sans-serif;
+}
+
+.sort li {
+	text-align: center;
+	display: table-cell;
+    float: left;
+    margin: 0 2px 0 0;
+    padding: 10px;
+    border: 1px solid black;
+    background: #acacac;
+    font-family:  "Helvetica", serif;
+}
+
+.top {
+    padding: 8px 19px 0 32px;
+    height: 1%;
+    border-bottom: 1px solid black;
+    font: 1.25em/1.133em 'UbuntuMedium', Arial, Helvetica, sans-serif;
+}
+
+li.active  {
+    background: #dddddd;
+    color: black;
+    position: relative;
+}
+
+.btn-restart {
+    background-color: #ba133b;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+	cursor: pointer;
+	border-radius: 6px;
+	border: 1px solid #080808;
+}
+
+.Settings {
+    background-color: #dd7b2a;
+    color: white;
+    padding: 16px;
+    font-size: 18px;
+	cursor: pointer;
+	border-radius: 6px;
+	border: 1px solid #080808;
+}
+
+.btn-add {
+    background-color: #0ead36;
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+	cursor: pointer;
+	border-radius: 6px;
+	border: 1px solid #080808;
+}
+
+.sort a {
+	color: black;
+}
+
+.model-top {
+	list-style: none;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+	display: table;
+	table-layout: fixed;
+}
+
+.model-top a {
+	display: table-cell;
+}
+
+.add-button {
+	text-align: left;
+}
+
+.block{
+	text-align: right;
+}
+
+.model-name {
+	text-align: center;
 }
