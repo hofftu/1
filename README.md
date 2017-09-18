@@ -175,3 +175,7 @@ Created by [sKanoodle](https://github.com/sKanoodle)
 This script will create a symlink for the models UID directories to a directory using the models name. This will make it easier to browse through the recorded files by having directories named after the models instead of their UIDs, while still keeping all of their recordings in a single directory if/when the model changes her display name.
 
 Only tested on linux
+
+## postProcessing.py and test_postProcessing.py
+
+Example of a post processing script to encode (or move, filter, etc.) files directly after the recording ended. test_postProcessing.py emulates the call from the main script (MFCRecorder.py), so that postProcessing.py can be tested independently. For more information refer to the comments inside the scripts.
