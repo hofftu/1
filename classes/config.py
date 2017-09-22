@@ -66,7 +66,7 @@ class Config:
             return {int(line) for line in file.readlines()} #creates a set
 
     #maybe belongs more into a filter class, but then we would have to create one
-    def does_model_pass_filter(self, session, now):
+    def does_model_pass_filter(self, session):
         f = self.filter
         if session['uid'] in f.wanted:
             if f.min_viewers and session['rc'] < f.min_viewers:
@@ -76,7 +76,7 @@ class Config:
                 return True
         if session['uid'] in f.blacklisted:
             return False
-        if f.newer_than_hours and session['creation'] > now - f.newer_than_hours * 60 * 60:
+        if f.newer_than_hours and session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
             session['condition'] = 'NEW_'
             return True
         if f.viewers and session['rc'] > f.viewers:
