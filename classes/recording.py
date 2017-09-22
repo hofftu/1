@@ -4,7 +4,17 @@ import os
 import livestreamer
 from colorama import Fore
 
+def start_recording(session, settings):
+    '''starts recording a session if it is not already being recorded'''
+    #possible race condition?
+    already_recording = RecordingThread.currently_recording_models.get(session['uid'])
+    if already_recording:
+        already_recording['rc'] = session['rc']
+    else:
+        RecordingThread(session, settings).start()
+
 class RecordingThread(threading.Thread):
+    '''thread for recording a MFC session'''
     URL_TEMPLATE = "hlsvariant://http://video{srv}.myfreecams.com:1935/NxServer/ngrp:mfc_{id}.f4v_mobile/playlist.m3u8"
     READING_BLOCK_SIZE = 1024
     currently_recording_models = {}
@@ -19,7 +29,6 @@ class RecordingThread(threading.Thread):
         self.settings = settings
 
     def run(self):
-        #TODO: not sure where we will check if the model is already being recorded
         stream = self.stream
         if not stream:
             return
@@ -58,6 +67,7 @@ class RecordingThread(threading.Thread):
 
     @property
     def stream(self):
+        '''returns a dictionary with available streams'''
         streams = {} #not sure this is needed for the finally to work
         try:
             streams = livestreamer.Livestreamer().streams(self.URL_TEMPLATE.format(
@@ -67,6 +77,7 @@ class RecordingThread(threading.Thread):
             return streams.get('best')
 
     def create_path(self, template, time):
+        '''builds a recording-specific path from a template'''
         return template.format(
             path=self.settings.save_directory, model=self.session['nm'], uid=self.session['uid'],
             seconds=time.strftime("%S"), day=time.strftime("%d"),
