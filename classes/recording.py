@@ -57,7 +57,7 @@ class RecordingThread(threading.Thread):
     def stream(self):
         streams = {} #not sure this is needed for the finally to work
         try:
-            streams = Livestreamer().streams(self.URL_TEMPLATE.format(id=(int(self.session['uid']) + 100_000_000), srv=(int(self.session['camserv']) - 500)))
+            streams = Livestreamer().streams(self.URL_TEMPLATE.format(id=int(self.session['uid']) + 100_000_000, srv=int(self.session['camserv']) - 500))
         finally:
             return streams.get('best')
     
