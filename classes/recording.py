@@ -34,8 +34,8 @@ class RecordingThread(threading.Thread):
                 except:
                     break
                 with self._lock:
-                    self.total_data += 1024
-                self.file_size += 1024
+                    self.total_data += self.READING_BLOCK_SIZE
+                self.file_size += self.READING_BLOCK_SIZE
         
         if self.file_size == 0:
             with self._lock:
