@@ -34,6 +34,7 @@ def get_online_models():
                 model = models[uid]
                 models[uid] = model.merge_tags(element)
                 #at this point we have a merged object, so we can filter
+                #TODO: what about object with ID -500 and possible objects that didnt have a counterpart?
                 if model.session['vs'] != mfcauto.STATE.FreeChat or str(model.session['camserv']) not in servers:
                     models.pop(uid)
 
