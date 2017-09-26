@@ -1,19 +1,29 @@
 import configparser
 import time
+import os
+import platform
+import ctypes
 
 class Config:
     class Container:
-        #empty class to hold some data
+        '''empty class to hold some data'''
         #alternatively we could model the setting and filter classes...
         pass
 
     def __init__(self, config_file_path):
         self._config_file_path = config_file_path
         self._parser = configparser.ConfigParser()
+        self.refresh()
 
     @property
     def settings(self):
-        self._parse()
+        return self._settings
+
+    @property
+    def filter(self):
+        return self._filter
+
+    def _read_settings(self):
         s = Config.Container()
         s.save_directory = self._parser.get('paths', 'save_directory')
         s.wishlist_path = self._parser.get('paths', 'wishlist')
@@ -35,27 +45,31 @@ class Config:
         #why do we need this check?
         if not s.min_space: s.min_space = 0
 
-        return s
+        self._settings = s
 
-    @property
-    def filter(self):
-        self._parse()
+    def _read_filter(self):
         f = Config.Container()
-        f.min_viewers = int(self._parser.get('settings', 'minViewers'))
-        f.viewers = int(self._parser.get('AutoRecording', 'viewers'))
         f.newer_than_hours = int(self._parser.get('AutoRecording', 'newerThanHours'))
         f.score = int(self._parser.get('AutoRecording', 'score'))
         f.auto_stop_viewers = int(self._parser.get('AutoRecording', 'autoStopViewers'))
         f.stop_viewers = int(self._parser.get('settings', 'StopViewers'))
-        f.min_tags = int(self._parser.get('AutoRecording', 'minTags'))
+        f.min_tags = max(1, int(self._parser.get('AutoRecording', 'minTags')))
         f.wanted_tags = {s.strip().lower() for s in self._parser.get('AutoRecording', 'tags').split(',')}
+        #account for when stop is greater than min
+        f.min_viewers = max(f.stop_viewers, int(self._parser.get('settings', 'minViewers')))
+        f.viewers = max(f.auto_stop_viewers, int(self._parser.get('AutoRecording', 'viewers')))
 
-        settings = self.settings
+        f.blacklisted = self._read_uid_list(self.settings.blacklist_path)
+        f.wanted = self._read_uid_list(self.settings.wishlist_path)
 
-        f.blacklisted = self._read_uid_list(settings.blacklist_path)
-        f.wanted = self._read_uid_list(settings.wishlist_path)
+        self._filter = f
 
-        return f
+    def refresh(self):
+        '''load config again to get fresh values'''
+        self._parse()
+        self._read_settings()
+        self._read_filter()
+        self._available_space = self._get_free_diskspace()
 
     def _parse(self):
         self._parser.read(self._config_file_path)
@@ -67,27 +81,45 @@ class Config:
             return {int(line) for line in file.readlines()} #creates a set
 
     #maybe belongs more into a filter class, but then we would have to create one
-    def does_model_pass_filter(self, session):
+    def does_model_pass_filter(self, model):
+        '''determines whether a recording should start'''
         f = self.filter
-        if session['uid'] in f.wanted:
-            if f.min_viewers and session['rc'] < f.min_viewers:
+        if model.uid in f.wanted:
+            if f.min_viewers and model.session['rc'] < f.min_viewers:
                 return False
             else:
-                session['condition'] = ''
+                model.session['condition'] = ''
                 return True
-        if session['uid'] in f.blacklisted:
+        if model.uid in f.blacklisted:
             return False
-        if f.newer_than_hours and session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
-            session['condition'] = 'NEW_'
+        if f.newer_than_hours and model.session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
+            model.session['condition'] = 'NEW_'
             return True
-        if f.viewers and session['rc'] > f.viewers:
-            session['condition'] = 'VIEWERS_'
+        if f.viewers and model.session['rc'] > f.viewers:
+            model.session['condition'] = 'VIEWERS_'
             return True
-        if f.score and session['camscore'] > f.score:
-            session['condition'] = 'SCORE_'
+        if f.score and model.session['camscore'] > f.score:
+            model.session['condition'] = 'SCORE_'
             return True
-        if f.wanted_tags and f.min_tags:
-            if len(f.wanted_tags.union([s.strip().lower() for s in session['tags']])) >= f.min_tags:
-                session['condition'] = 'TAGS_'
-                return True
+        if (f.wanted_tags and
+                len(f.wanted_tags.intersection(model.tags if model.tags is not None else [])) >= f.min_tags):
+            model.session['condition'] = 'TAGS_'
+            return True
         return False
+
+    def _get_free_diskspace(self):
+        '''https://stackoverflow.com/questions/51658/cross-platform-space-remaining-on-volume-using-python'''
+        if platform.system() == 'Windows':
+            free_bytes = ctypes.c_ulonglong(0)
+            ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(self.settings.save_directory), None, None, ctypes.pointer(free_bytes))
+            return free_bytes.value / 1024 / 1024
+        st = os.fstatvfs(self.settings.save_directory)
+        return st.f_bavail * st.f_frsize / 1024 / 1024 / 1024
+
+    def keep_recording(self, session):
+        '''determines whether a recording should continue'''
+        min_viewers = self.filter.auto_stop_viewers if session['condition'] == 'VIEWERS_' else self.filter.stop_viewers
+        return (session['rc'] >= min_viewers
+                and self._available_space > self.settings.min_space
+                and session['uid'] not in self.filter.blacklisted)
+    
