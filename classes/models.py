@@ -1,4 +1,5 @@
 import threading
+import asyncio
 import requests
 import mfcauto
 
@@ -20,28 +21,28 @@ def get_online_models():
             #test for data in models. Data in models means that we
             #already had this function running and we can disconnect safely
             if models:
-                client.disconnect()
                 return
 
             #merging tags and models (needed due to a possible bug in mfcauto)
             all_results = mfcauto.Model.find_models(lambda m: True)
-            print(all_results)
-            for element in all_results:
-                uid = int(element.uid)
-                if uid not in models.keys():
-                    models[uid] = Model(element)
-                    continue
-                model = models[uid]
-                models[uid] = model.merge_tags(element)
-                #at this point we have a merged object, so we can filter
-                #TODO: what about object with ID -500 and possible objects that didnt have a counterpart?
-                if model.session['vs'] != mfcauto.STATE.FreeChat or str(model.session['camserv']) not in servers:
-                    models.pop(uid)
+            models = {int(model.uid): Model(model) for model in all_results
+                      if model.tags is None and int(model.uid) > 0
+                      and model.bestsession['vs'] == mfcauto.STATE.FreeChat
+                      and str(model.bestsession['camserv']) in servers}
+            tags = (tag for tag in all_results if tag.tags is not None)
+            for tag in tags:
+                model = models.get(int(tag.uid), None)
+                if model:
+                    model.tags = tag.tags
 
+            print('{} models online'.format(len(models)))
+            client.disconnect()
+
+    #setting a new event loop, because it gets closed in the mfcauo client (feels dirty)
+    asyncio.set_event_loop(asyncio.new_event_loop())
     #we dont want to query the models in CLIENT_MODELSLOADED, because we are
     #missing the tags at this point. Rather query everything on TAGS
     client = mfcauto.SimpleClient()
-    client.on(mfcauto.FCTYPE.CLIENT_MODELSLOADED, lambda: None)
     client.on(mfcauto.FCTYPE.TAGS, on_tags)
     client.connect()
 
