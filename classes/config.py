@@ -23,17 +23,21 @@ class Config:
     def filter(self):
         return self._filter
 
+    def _make_absolute(self, path):
+        if path and not os.path.isabs(path):
+            return os.path.join(os.path.dirname(self._config_file_path), path)
+
     def _read_settings(self):
         s = Config.Container()
-        s.save_directory = self._parser.get('paths', 'save_directory')
-        s.wishlist_path = self._parser.get('paths', 'wishlist')
+        s.save_directory = self._make_absolute(self._parser.get('paths', 'save_directory'))
+        s.wishlist_path = self._make_absolute(self._parser.get('paths', 'wishlist'))
         s.blacklist_path = self._parser.get('paths', 'blacklist')
         s.interval = int(self._parser.get('settings', 'checkInterval'))
         s.directory_structure = self._parser.get('paths', 'directory_structure').lower()
         s.post_processing_command = self._parser.get('settings', 'postProcessingCommand')
         s.port = int(self._parser.get('web', 'port'))
         s.min_space = int(self._parser.get('settings', 'minSpace'))
-        s.completed_directory = self._parser.get('paths', 'completed_directory').lower()
+        s.completed_directory = self._make_absolute(self._parser.get('paths', 'completed_directory').lower())
 
         #why do we need exception handling here?
         try:
