@@ -27,6 +27,8 @@ class RecordingThread(threading.Thread):
         self.file_size = 0
         self.session = session
         self.config = config
+        self.currently_recording_models[session['uid']] = session
+        print(Fore.GREEN + "started recording {}".format(self.session['nm']) + Fore.RESET)
 
     def run(self):
         stream = self.stream
@@ -53,11 +55,10 @@ class RecordingThread(threading.Thread):
             with self._lock:
                 self.file_count -= 1
             os.remove(file_path)
-            return
 
         #TODO: postprocessing...
 
-        if self.config.settings.completed_directory:
+        elif self.config.settings.completed_directory:
             directory = self.create_path(self.config.settings.completed_directory, start_time)
             os.makedirs(directory, exist_ok=True)
             os.rename(file_path, os.path.join(directory, os.path.basename(file_path)))
