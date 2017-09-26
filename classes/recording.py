@@ -22,11 +22,11 @@ class RecordingThread(threading.Thread):
     file_count = 0
     _lock = threading.Lock()
 
-    def __init__(self, session, settings):
+    def __init__(self, session, config):
         super().__init__()
         self.file_size = 0
         self.session = session
-        self.settings = settings
+        self.config = config
 
     def run(self):
         stream = self.stream
@@ -34,13 +34,13 @@ class RecordingThread(threading.Thread):
             return
 
         start_time = datetime.datetime.now()
-        file_path = self.create_path(self.settings.directory_structure, start_time)
+        file_path = self.create_path(self.config.settings.directory_structure, start_time)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with self._lock:
             self.file_count += 1
 
         with stream.open() as source, open(file_path, 'wb') as target:
-            while True: #TODO: add recording conditions
+            while self.config.keep_recording(self.session):
                 try:
                     target.write(source.read(self.READING_BLOCK_SIZE))
                 except:
@@ -57,8 +57,8 @@ class RecordingThread(threading.Thread):
 
         #TODO: postprocessing...
 
-        if self.settings.completed_directory:
-            directory = self.create_path(self.settings.completed_directory, start_time)
+        if self.config.settings.completed_directory:
+            directory = self.create_path(self.config.settings.completed_directory, start_time)
             os.makedirs(directory, exist_ok=True)
             os.rename(file_path, os.path.join(directory, os.path.basename(file_path)))
 
@@ -79,7 +79,7 @@ class RecordingThread(threading.Thread):
     def create_path(self, template, time):
         '''builds a recording-specific path from a template'''
         return template.format(
-            path=self.settings.save_directory, model=self.session['nm'], uid=self.session['uid'],
+            path=self.config.settings.save_directory, model=self.session['nm'], uid=self.session['uid'],
             seconds=time.strftime("%S"), day=time.strftime("%d"),
             minutes=time.strftime("%M"), hour=time.strftime("%H"),
             month=time.strftime("%m"), year=time.strftime("%Y"), auto=self.session['condition'])
