@@ -105,10 +105,11 @@ class Config:
         if f.score and model.session['camscore'] > f.score:
             model.session['condition'] = 'SCORE_'
             return True
-        if (f.wanted_tags and
-                len(f.wanted_tags.intersection(model.tags if model.tags is not None else [])) >= f.min_tags):
-            model.session['condition'] = 'TAGS_'
-            return True
+        if f.wanted_tags:
+            matches = f.wanted_tags.intersection(model.tags if model.tags is not None else [])
+            if len(matches) >= f.min_tags:
+                model.session['condition'] = '({})_'.format(','.join(matches))
+                return True
         return False
 
     def _get_free_diskspace(self):
