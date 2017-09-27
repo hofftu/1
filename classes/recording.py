@@ -3,6 +3,7 @@ import datetime
 import os
 import livestreamer
 from colorama import Fore
+import postprocessing
 
 def start_recording(session, settings):
     '''starts recording a session if it is not already being recorded'''
@@ -56,7 +57,9 @@ class RecordingThread(threading.Thread):
                 self.file_count -= 1
             os.remove(file_path)
 
-        #TODO: postprocessing...
+        elif self.config.settings.post_processing_command:
+            postprocessing.put_item(self.config.settings.post_processing_command,
+                                    self.session['uid'], self.session['nm'], file_path)
 
         elif self.config.settings.completed_directory:
             directory = self.create_path(self.config.settings.completed_directory, start_time)
