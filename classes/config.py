@@ -31,7 +31,7 @@ class Config:
         s = Config.Container()
         s.save_directory = self._make_absolute(self._parser.get('paths', 'save_directory'))
         s.wishlist_path = self._make_absolute(self._parser.get('paths', 'wishlist'))
-        s.blacklist_path = self._parser.get('paths', 'blacklist')
+        s.blacklist_path = self._make_absolute(self._parser.get('paths', 'blacklist'))
         s.interval = int(self._parser.get('settings', 'checkInterval'))
         s.directory_structure = self._parser.get('paths', 'directory_structure').lower()
         s.post_processing_command = self._parser.get('settings', 'postProcessingCommand')
