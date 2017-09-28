@@ -7,8 +7,8 @@ This is script automates the recording of public webcam shows from myfreecams.
 
 I have only tested this on debian(7+8) and Mac OS X (10.10.4), but it should run on other OSs
 
-Requires python3.5 or newer. You can grab python3.5.2 from https://www.python.org/downloads/release/python-352/
-and mfcauto.py (https://github.com/beaston02/mfcauto.py)
+Requires python3.5 or newer. You can grab the newest python release from https://www.python.org/downloads/
+and mfcauto.py (https://github.com/ZombieAlex/mfcauto.py)
 
 to install required modules, run:
 ```
