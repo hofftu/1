@@ -1,0 +1,11 @@
+{
+    12345: {
+        "enabled": true,
+        "list_mode": 0,
+        "custom_name": "Yada Yada",
+        "comment": "",
+        "min_viewers": 0,
+        "stop_viewers": 0,
+
+    },
+}
