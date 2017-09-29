@@ -10,10 +10,47 @@ I have only tested this on debian(7+8) and Mac OS X (10.10.4), but it should run
 Requires python3.5 or newer. You can grab the newest python release from https://www.python.org/downloads/
 and mfcauto.py (https://github.com/ZombieAlex/mfcauto.py)
 
-to install required modules, run:
+## installing and Cloning with the required modules:
+
+to install the required modules, run: (For Debain/Ubuntu)
 ```
-python3.5 -m pip install -r requirements.txt
-python3.5 -m pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
+sudo apt-install update && sudo apt-install upgrade
+sudo apt-install python3-pip && sudo apt-get install git
+cd /home/yourusername
+git clone https://github.com/beaston02/MFCRecorder
+cd MFCRecorder
+pip3 install -r requirements.txt
+pip3 install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
+Now edit the config.conf file and set the appropirate paths to your directories and wanted.txt file (see Setup)
+
+```
+
+to install required modules, run: (For Arch Linux, Antergos, Manjaro, etc.)
+```
+pacman -Syuu
+pacman -S python-pip git
+cd /home/yourusername
+git clone https://github.com/beaston02/MFCRecorder
+cd MFCRecorder
+pip install -r requirements.txt
+pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
+Now edit the config.conf file and set the appropirate paths to your directories and wanted.txt file (see Setup)
+
+```
+
+to install the required modules, run: (For CentOS/Red Hat/Fedora) NOT TESTED BUT GOES LIKE:
+```
+yum update
+yum upgrade
+yum python-pip
+yum install git
+cd /home/yourusername
+git clone https://github.com/beaston02/CAM4Recorder
+cd MFCRecorder
+pip install -r requirements.txt
+pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
+Now edit the config.conf file and set the appropirate paths to your directories and wanted.txt file (see Setup)
+
 ```
 
 ## Setup
