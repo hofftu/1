@@ -9,7 +9,9 @@ import classes.postprocessing
 
 if __name__ == '__main__':
     config = classes.config.Config(os.path.join(sys.path[0], 'config.conf'))
-    classes.postprocessing.init_workers(config.settings.post_processing_thread_count)
+    #when config is edited at runtime and postprocessing is added, we cannot start it
+    if config.settings.post_processing_command:
+        classes.postprocessing.init_workers(config.settings.post_processing_thread_count)
     next_run = datetime.datetime.now()
     while True:
         if datetime.datetime.now() < next_run:

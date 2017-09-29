@@ -3,6 +3,11 @@ import time
 import os
 import platform
 import ctypes
+import json
+import threading
+
+LIST_MODE_WANTED = 0
+LIST_MODE_BLACKLISTED = 1
 
 class Config:
     class Container:
@@ -31,7 +36,6 @@ class Config:
         s = Config.Container()
         s.save_directory = self._make_absolute(self._parser.get('paths', 'save_directory'))
         s.wishlist_path = self._make_absolute(self._parser.get('paths', 'wishlist'))
-        s.blacklist_path = self._make_absolute(self._parser.get('paths', 'blacklist'))
         s.interval = int(self._parser.get('settings', 'checkInterval'))
         s.directory_structure = self._parser.get('paths', 'directory_structure').lower()
         s.post_processing_command = self._parser.get('settings', 'postProcessingCommand')
@@ -63,8 +67,7 @@ class Config:
         f.min_viewers = max(f.stop_viewers, int(self._parser.get('settings', 'minViewers')))
         f.viewers = max(f.auto_stop_viewers, int(self._parser.get('AutoRecording', 'viewers')))
 
-        f.blacklisted = self._read_uid_list(self.settings.blacklist_path)
-        f.wanted = self._read_uid_list(self.settings.wishlist_path)
+        f.wanted = Wanted(self.settings)
 
         self._filter = f
 
@@ -78,23 +81,18 @@ class Config:
     def _parse(self):
         self._parser.read(self._config_file_path)
 
-    def _read_uid_list(self, path):
-        if not path:
-            return set()
-        with open(path, 'r') as file:
-            return {int(line) for line in file.readlines()} #creates a set
-
     #maybe belongs more into a filter class, but then we would have to create one
     def does_model_pass_filter(self, model):
         '''determines whether a recording should start'''
         f = self.filter
-        if model.uid in f.wanted:
-            if f.min_viewers and model.session['rc'] < f.min_viewers:
+        if f.wanted.is_wanted(model.uid):
+            #TODO: do we want a global min_viewers if model specific is not set??
+            if model.session['rc'] < f.wanted.dict[model.uid]['min_viewers']:
                 return False
             else:
                 model.session['condition'] = ''
                 return True
-        if model.uid in f.blacklisted:
+        if f.wanted.is_blacklisted(model.uid):
             return False
         if f.newer_than_hours and model.session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
             model.session['condition'] = 'NEW_'
@@ -123,8 +121,62 @@ class Config:
 
     def keep_recording(self, session):
         '''determines whether a recording should continue'''
-        min_viewers = self.filter.auto_stop_viewers if session['condition'] == 'VIEWERS_' else self.filter.stop_viewers
+        #would it be possible that no entry is existing if we are already recording?
+        #TODO: global stop_viewers if no model specific is set??
+        #TODO: stop viewers will also stop recordings based on tags etc.
+        min_viewers = self.filter.auto_stop_viewers if session['condition'] == 'VIEWERS_' else self.filter.wanted.dict[session['uid']['stop_viewers']]
         return (session['rc'] >= min_viewers
                 and self._available_space > self.settings.min_space
-                and session['uid'] not in self.filter.blacklisted)
+                #TODO: should we really instantaneously stop recording if model was added to blacklist??
+                and self.filter.wanted.is_blacklisted(session['uid']))
     
+class Wanted():
+
+    def __init__(self, settings):
+        self._lock = threading.Lock()
+        self._settings = settings
+        #create new empty wanted file
+        try:
+            with open(self._settings.wishlist_path, 'x') as file:
+                file.write('{}')
+        except FileExistsError:
+            pass
+        self._load()
+
+    def _load(self):
+        with self._lock:
+            with open(self._settings.wishlist_path, 'r+') as file:
+                self.dict = {int(uid): data for uid, data in json.load(file).items()}
+
+    def set_data(self, uid, enabled=True, list_mode=0, custom_name='', comment='', min_viewers=0, stop_viewers=0):
+        data = {
+            'enabled': enabled,
+            'list_mode': list_mode,
+            'custom_name': custom_name,
+            'comment': comment,
+            'min_viewers': min_viewers,
+            'stop_viewers': stop_viewers,
+        }
+        self.set_data_dict(uid, data)
+
+    def set_data_dict(self, uid, data):
+        '''set data dictionary for model uid, existing or not'''
+        with self._lock:
+            self.dict[uid] = data
+            with open(self._settings.wishlist_path, 'w') as file:
+                json.dump(self.dict, file, indent=4)
+
+    def is_wanted(self, uid):
+        '''determines if model is enabled and wanted'''
+        return self._is_list_mode_value(uid, LIST_MODE_WANTED)
+
+    def is_blacklisted(self, uid):
+        '''determines if model is enabled and blacklisted'''
+        return self._is_list_mode_value(uid, LIST_MODE_BLACKLISTED)
+
+    def _is_list_mode_value(self, uid, value):
+        '''determines if list_mode equals the specified one, but only if the item is enabled'''
+        entry = self.dict.get(uid)
+        if not (entry and entry['enabled']):
+            return False
+        return entry['list_mode'] == value
