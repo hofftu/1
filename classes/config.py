@@ -148,7 +148,8 @@ class Wanted():
             with open(self._settings.wishlist_path, 'r+') as file:
                 self.dict = {int(uid): data for uid, data in json.load(file).items()}
 
-    def set_data(self, uid, enabled=True, list_mode=0, custom_name='', comment='', min_viewers=0, stop_viewers=0):
+    def set_data(self, uid, enabled=True, list_mode=LIST_MODE_WANTED,
+                 custom_name='', comment='', min_viewers=0, stop_viewers=0):
         data = {
             'enabled': enabled,
             'list_mode': list_mode,
