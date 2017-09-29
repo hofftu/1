@@ -11,7 +11,7 @@ import classes.postprocessing
 
 if __name__ == '__main__':
     if StrictVersion(mfcauto.__version__) < StrictVersion('0.1.4'):
-        print('ERROR: cannot get tags below mfcauto 0.1.4')
+        print('ERROR: Cannot get tags with mfcauto version below 0.1.4. Update mfcauto!')
         exit()
 
     config = classes.config.Config(os.path.join(sys.path[0], 'config.conf'))
