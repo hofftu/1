@@ -16,24 +16,17 @@ def get_online_models():
         '''function for the TAGS event in mfcclient'''
         nonlocal models
 
-        #locking to prevent from disconnecting too early
+        #locking to prevent from running the check twice
         with models_lock:
             #test for data in models. Data in models means that we
-            #already had this function running and we can disconnect safely
+            #already had this function running and we can return
             if models:
                 return
 
-            #merging tags and models (needed due to a possible bug in mfcauto)
             all_results = mfcauto.Model.find_models(lambda m: True)
             models = {int(model.uid): Model(model) for model in all_results
-                      if model.tags is None and int(model.uid) > 0
-                      and model.bestsession['vs'] == mfcauto.STATE.FreeChat
+                      if model.uid > 0 and model.bestsession['vs'] == mfcauto.STATE.FreeChat
                       and str(model.bestsession['camserv']) in servers}
-            tags = (tag for tag in all_results if tag.tags is not None)
-            for tag in tags:
-                model = models.get(int(tag.uid), None)
-                if model:
-                    model.tags = tag.tags
 
             print('{} models online'.format(len(models)))
             client.disconnect()
@@ -60,9 +53,3 @@ class Model():
     def __repr__(self):
         return '{{"name": {}, "uid": {}, "tags": {}, "session": {}}}'.format(
             self.name, self.uid, self.tags, self.session)
-
-    def merge_tags(self, model):
-        '''merges tags into a model or vice versa and returns new object'''
-        base = self if self.tags is None else model
-        base.tags = self.tags if self.tags is not None else model.tags
-        return base
