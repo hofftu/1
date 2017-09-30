@@ -29,8 +29,9 @@ class Config:
         return self._filter
 
     def _make_absolute(self, path):
-        if path and not os.path.isabs(path):
-            return os.path.join(os.path.dirname(self._config_file_path), path)
+        if not path or os.path.isabs(path):
+            return path
+        return os.path.join(os.path.dirname(self._config_file_path), path)
 
     def _read_settings(self):
         s = Config.Container()
