@@ -9,12 +9,43 @@ import threading
 LIST_MODE_WANTED = 0
 LIST_MODE_BLACKLISTED = 1
 
-class Config:
-    class Container:
-        '''empty class to hold some data'''
-        #alternatively we could model the setting and filter classes...
-        pass
+class Settings():
+    def __init__(self, parser, make_absolute):
+        self.save_directory = make_absolute(parser.get('paths', 'save_directory'))
+        self.wishlist_path = make_absolute(parser.get('paths', 'wishlist'))
+        self.interval = int(parser.get('settings', 'checkInterval'))
+        self.directory_structure = parser.get('paths', 'directory_structure').lower()
+        self.post_processing_command = parser.get('settings', 'postProcessingCommand')
+        self.port = int(parser.get('web', 'port'))
+        self.min_space = int(parser.get('settings', 'minSpace'))
+        self.completed_directory = make_absolute(parser.get('paths', 'completed_directory').lower())
+        self.priority = int(parser.get('settings', 'priority'))
 
+        #why do we need exception handling here?
+        try:
+            self.post_processing_thread_count = int(parser.get('settings', 'postProcessingThreads'))
+        except ValueError:
+            if self.post_processing_command and not self.post_processing_thread_count:
+                self.post_processing_thread_count = 1
+
+        #why do we need this check?
+        if not self.min_space: self.min_space = 0
+
+class Filter():
+    def __init__(self, parser, settings):
+        self.newer_than_hours = int(parser.get('AutoRecording', 'newerThanHours'))
+        self.score = int(parser.get('AutoRecording', 'score'))
+        self.auto_stop_viewers = int(parser.get('AutoRecording', 'autoStopViewers'))
+        self.stop_viewers = int(parser.get('settings', 'StopViewers'))
+        self.min_tags = max(1, int(parser.get('AutoRecording', 'minTags')))
+        self.wanted_tags = {s.strip().lower() for s in parser.get('AutoRecording', 'tags').split(',')}
+        #account for when stop is greater than min
+        self.min_viewers = max(self.stop_viewers, int(parser.get('settings', 'minViewers')))
+        self.viewers = max(self.auto_stop_viewers, int(parser.get('AutoRecording', 'viewers')))
+
+        self.wanted = Wanted(settings)
+
+class Config():
     def __init__(self, config_file_path):
         self._config_file_path = config_file_path
         self._parser = configparser.ConfigParser()
@@ -33,51 +64,11 @@ class Config:
             return path
         return os.path.join(os.path.dirname(self._config_file_path), path)
 
-    def _read_settings(self):
-        s = Config.Container()
-        s.save_directory = self._make_absolute(self._parser.get('paths', 'save_directory'))
-        s.wishlist_path = self._make_absolute(self._parser.get('paths', 'wishlist'))
-        s.interval = int(self._parser.get('settings', 'checkInterval'))
-        s.directory_structure = self._parser.get('paths', 'directory_structure').lower()
-        s.post_processing_command = self._parser.get('settings', 'postProcessingCommand')
-        s.port = int(self._parser.get('web', 'port'))
-        s.min_space = int(self._parser.get('settings', 'minSpace'))
-        s.completed_directory = self._make_absolute(self._parser.get('paths', 'completed_directory').lower())
-        s.priority = int(self._parser.get('settings', 'priority'))
-
-        #why do we need exception handling here?
-        try:
-            s.post_processing_thread_count = int(self._parser.get('settings', 'postProcessingThreads'))
-        except ValueError:
-            if s.post_processing_command and not s.post_processing_thread_count:
-                s.post_processing_thread_count = 1
-
-        #why do we need this check?
-        if not s.min_space: s.min_space = 0
-
-        self._settings = s
-
-    def _read_filter(self):
-        f = Config.Container()
-        f.newer_than_hours = int(self._parser.get('AutoRecording', 'newerThanHours'))
-        f.score = int(self._parser.get('AutoRecording', 'score'))
-        f.auto_stop_viewers = int(self._parser.get('AutoRecording', 'autoStopViewers'))
-        f.stop_viewers = int(self._parser.get('settings', 'StopViewers'))
-        f.min_tags = max(1, int(self._parser.get('AutoRecording', 'minTags')))
-        f.wanted_tags = {s.strip().lower() for s in self._parser.get('AutoRecording', 'tags').split(',')}
-        #account for when stop is greater than min
-        f.min_viewers = max(f.stop_viewers, int(self._parser.get('settings', 'minViewers')))
-        f.viewers = max(f.auto_stop_viewers, int(self._parser.get('AutoRecording', 'viewers')))
-
-        f.wanted = Wanted(self.settings)
-
-        self._filter = f
-
     def refresh(self):
         '''load config again to get fresh values'''
         self._parse()
-        self._read_settings()
-        self._read_filter()
+        self._settings = Settings(self._parser, self._make_absolute)
+        self._filter = Filter(self._parser, self.settings)
         self._available_space = self._get_free_diskspace()
 
     def _parse(self):
@@ -133,7 +124,6 @@ class Config:
                 and self.filter.wanted.is_blacklisted(session['uid']))
     
 class Wanted():
-
     def __init__(self, settings):
         self._lock = threading.Lock()
         self._settings = settings
