@@ -43,6 +43,7 @@ class Config:
         s.port = int(self._parser.get('web', 'port'))
         s.min_space = int(self._parser.get('settings', 'minSpace'))
         s.completed_directory = self._make_absolute(self._parser.get('paths', 'completed_directory').lower())
+        s.priority = int(self._parser.get('settings', 'priority'))
 
         #why do we need exception handling here?
         try:
@@ -150,7 +151,7 @@ class Wanted():
                 self.dict = {int(uid): data for uid, data in json.load(file).items()}
 
     def set_data(self, uid, enabled=True, list_mode=LIST_MODE_WANTED,
-                 custom_name='', comment='', min_viewers=0, stop_viewers=0):
+                 custom_name='', comment='', min_viewers=0, stop_viewers=0, priority=0):
         data = {
             'enabled': enabled,
             'list_mode': list_mode,
@@ -158,6 +159,7 @@ class Wanted():
             'comment': comment,
             'min_viewers': min_viewers,
             'stop_viewers': stop_viewers,
+            'priority': priority,
         }
         self.set_data_dict(uid, data)
 
@@ -179,6 +181,6 @@ class Wanted():
     def _is_list_mode_value(self, uid, value):
         '''determines if list_mode equals the specified one, but only if the item is enabled'''
         entry = self.dict.get(uid)
-        if not (entry and entry['enabled']):
+        if not (entry and entry['enabled'] and self._settings.priority <= entry['priority']):
             return False
         return entry['list_mode'] == value
