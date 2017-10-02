@@ -1,4 +1,6 @@
 config.conf
+webapp/static/css/*
+!webapp/static/css/README.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

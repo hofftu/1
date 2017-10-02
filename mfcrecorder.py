@@ -2,8 +2,9 @@ import datetime
 import time
 import os
 import sys
-import mfcauto
+import threading
 from distutils.version import StrictVersion
+import mfcauto
 import classes.config
 import classes.models
 import classes.recording
@@ -18,6 +19,14 @@ if __name__ == '__main__':
     #when config is edited at runtime and postprocessing is added, we cannot start it
     if config.settings.post_processing_command:
         classes.postprocessing.init_workers(config.settings.post_processing_thread_count)
+    if config.settings.web_enabled:
+        import webapp
+        webapp.views.init_data(config)
+        threading.Thread(
+            target=webapp.app.run,
+            kwargs={'host':'0.0.0.0', 'port': config.settings.port, 'threaded':'True'}
+        ).start()
+
     next_run = datetime.datetime.now()
     while True:
         if datetime.datetime.now() < next_run:

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MFCRecorder - wanted</title>
+    <link rel="stylesheet" href="/static/css/style.css" type="text/css" media="all">
+    <link rel="stylesheet" href="/static/css/wanted.css" type="text/css" media="all">
+</head>
+<body>
+    <div class="header">
+        <div class="entry w10">UID</div>
+        <div class="entry w10">enabled</div>
+        <div class="entry w10">mode</div>
+        <div class="entry w10">custom name</div>
+        <div class="entry w10">comment</div>
+        <div class="entry w10">min viewers</div>
+        <div class="entry w10">stop viewers</div>
+        <div class="entry w10">priority</div>
+    </div>
+    {% for uid, settings in wanted.items() %}
+        <div class="entry-row">
+            <div class="entry w10">{{uid}}</div>
+            <div class="entry w10">{{settings['enabled']}}</div>
+            <div class="entry w10">{{settings['list_mode']}}</div>
+            <div class="entry w10">{{settings['custom_name']}}</div>
+            <div class="entry w10">{{settings['comment']}}</div>
+            <div class="entry w10">{{settings['min_viewers']}}</div>
+            <div class="entry w10">{{settings['stop_viewers']}}</div>
+            <div class="entry w10">{{settings['priority']}}</div>
+        </div>
+    {% endfor %}
+</body>

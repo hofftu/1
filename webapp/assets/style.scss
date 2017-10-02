@@ -1,0 +1,14 @@
+@for $i from 1 through 60{
+    .w#{$i}{
+        width: #{$i}rem;
+    }
+}
+
+.entry{
+    display: inline-block;
+}
+
+.header{
+    border-bottom: 2px solid black;
+    font-weight: bold;
+}
