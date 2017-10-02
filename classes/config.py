@@ -116,13 +116,14 @@ class Config():
         '''determines whether a recording should continue'''
         #would it be possible that no entry is existing if we are already recording?
         #TODO: global stop_viewers if no model specific is set??
-        #TODO: stop viewers will also stop recordings based on tags etc.
-        min_viewers = self.filter.auto_stop_viewers if session['condition'] == 'VIEWERS_' else self.filter.wanted.dict[session['uid']['stop_viewers']]
-        return (session['rc'] >= min_viewers
-                and self._available_space > self.settings.min_space
-                #TODO: should we really instantaneously stop recording if model was added to blacklist??
-                and self.filter.wanted.is_blacklisted(session['uid']))
-    
+        if session['condition'] == 'VIEWERS_':
+            min_viewers = self.filter.auto_stop_viewers
+        elif session['condition'] == '':
+            min_viewers = self.filter.wanted.dict[session['uid']]['stop_viewers']
+        else:
+            min_viewers = 0
+        return session['rc'] >= min_viewers and self._available_space > self.settings.min_space
+
 class Wanted():
     def __init__(self, settings):
         self._lock = threading.Lock()
