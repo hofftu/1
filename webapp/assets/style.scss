@@ -6,6 +6,10 @@
 
 .entry{
     display: inline-block;
+
+    &-row:nth-child(2n){
+        background-color: #DADADA;
+    }
 }
 
 .header{
