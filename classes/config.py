@@ -88,20 +88,20 @@ class Config():
                 return True
         if f.wanted.is_blacklisted(model.uid):
             return False
-        if f.newer_than_hours and model.session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
-            model.session['condition'] = 'NEW_'
-            return True
-        if f.viewers and model.session['rc'] > f.viewers:
-            model.session['condition'] = 'VIEWERS_'
-            return True
-        if f.score and model.session['camscore'] > f.score:
-            model.session['condition'] = 'SCORE_'
-            return True
         if f.wanted_tags:
             matches = f.wanted_tags.intersection(model.tags if model.tags is not None else [])
             if len(matches) >= f.min_tags:
                 model.session['condition'] = '({})_'.format(','.join(matches))
                 return True
+        if f.newer_than_hours and model.session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
+            model.session['condition'] = 'NEW_'
+            return True
+        if f.score and model.session['camscore'] > f.score:
+            model.session['condition'] = 'SCORE_'
+            return True
+        if f.viewers and model.session['rc'] > f.viewers:
+            model.session['condition'] = 'VIEWERS_'
+            return True
         return False
 
     def _get_free_diskspace(self):
