@@ -9,6 +9,7 @@
         //comment to maybe recognize the model or remember other stuff
         "comment": "",
         //Used instead of the global min_viewers from the config. Recording is only started if model has at least this amount of viewers.
+        //if stop_viewers is greater that this number, this number will be set to stop_viewers
         "min_viewers": 0,
         //Used instead of global stop_viewers. Recording is stopped if model has amount of viewers below this number.
         "stop_viewers": 0,

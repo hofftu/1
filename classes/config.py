@@ -80,7 +80,8 @@ class Config():
         f = self.filter
         if f.wanted.is_wanted(model.uid):
             #TODO: do we want a global min_viewers if model specific is not set??
-            if model.session['rc'] < f.wanted.dict[model.uid]['min_viewers']:
+            m_settings = f.wanted.dict[model.uid]
+            if model.session['rc'] < max(m_settings['min_viewers'], m_settings['stop_viewers']):
                 return False
             else:
                 model.session['condition'] = ''
