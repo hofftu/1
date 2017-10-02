@@ -13,17 +13,18 @@ class Settings():
     def __init__(self, parser, make_absolute):
         self.save_directory = make_absolute(parser.get('paths', 'save_directory'))
         self.wishlist_path = make_absolute(parser.get('paths', 'wishlist'))
-        self.interval = int(parser.get('settings', 'checkInterval'))
+        self.interval = parser.getint('settings', 'checkInterval')
         self.directory_structure = parser.get('paths', 'directory_structure').lower()
         self.post_processing_command = parser.get('settings', 'postProcessingCommand')
-        self.port = int(parser.get('web', 'port'))
-        self.min_space = int(parser.get('settings', 'minSpace'))
+        self.port = parser.getint('web', 'port')
+        self.web_enabled = parser.getboolean('web', 'enabled')
+        self.min_space = parser.getint('settings', 'minSpace')
         self.completed_directory = make_absolute(parser.get('paths', 'completed_directory').lower())
-        self.priority = int(parser.get('settings', 'priority'))
+        self.priority = parser.getint('settings', 'priority')
 
         #why do we need exception handling here?
         try:
-            self.post_processing_thread_count = int(parser.get('settings', 'postProcessingThreads'))
+            self.post_processing_thread_count = parser.getint('settings', 'postProcessingThreads')
         except ValueError:
             if self.post_processing_command and not self.post_processing_thread_count:
                 self.post_processing_thread_count = 1
@@ -33,15 +34,15 @@ class Settings():
 
 class Filter():
     def __init__(self, parser, settings):
-        self.newer_than_hours = int(parser.get('AutoRecording', 'newerThanHours'))
-        self.score = int(parser.get('AutoRecording', 'score'))
-        self.auto_stop_viewers = int(parser.get('AutoRecording', 'autoStopViewers'))
-        self.stop_viewers = int(parser.get('settings', 'StopViewers'))
-        self.min_tags = max(1, int(parser.get('AutoRecording', 'minTags')))
+        self.newer_than_hours = parser.getint('AutoRecording', 'newerThanHours')
+        self.score = parser.getint('AutoRecording', 'score')
+        self.auto_stop_viewers = parser.getint('AutoRecording', 'autoStopViewers')
+        self.stop_viewers = parser.getint('settings', 'StopViewers')
+        self.min_tags = max(1, parser.getint('AutoRecording', 'minTags'))
         self.wanted_tags = {s.strip().lower() for s in parser.get('AutoRecording', 'tags').split(',')}
         #account for when stop is greater than min
-        self.min_viewers = max(self.stop_viewers, int(parser.get('settings', 'minViewers')))
-        self.viewers = max(self.auto_stop_viewers, int(parser.get('AutoRecording', 'viewers')))
+        self.min_viewers = max(self.stop_viewers, parser.getint('settings', 'minViewers'))
+        self.viewers = max(self.auto_stop_viewers, parser.getint('AutoRecording', 'viewers'))
 
         self.wanted = Wanted(settings)
 
