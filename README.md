@@ -45,7 +45,7 @@ yum upgrade
 yum python-pip
 yum install git
 cd /home/yourusername
-git clone https://github.com/beaston02/CAM4Recorder
+git clone https://github.com/beaston02/MFCRecorder
 cd MFCRecorder
 pip install -r requirements.txt
 pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
