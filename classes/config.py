@@ -16,21 +16,12 @@ class Settings():
         self.interval = parser.getint('settings', 'checkInterval')
         self.directory_structure = parser.get('paths', 'directory_structure').lower()
         self.post_processing_command = parser.get('settings', 'postProcessingCommand')
+        self.post_processing_thread_count = parser.getint('settings', 'postProcessingThreads')
         self.port = parser.getint('web', 'port')
         self.web_enabled = parser.getboolean('web', 'enabled')
         self.min_space = parser.getint('settings', 'minSpace')
         self.completed_directory = make_absolute(parser.get('paths', 'completed_directory').lower())
         self.priority = parser.getint('settings', 'priority')
-
-        #why do we need exception handling here?
-        try:
-            self.post_processing_thread_count = parser.getint('settings', 'postProcessingThreads')
-        except ValueError:
-            if self.post_processing_command and not self.post_processing_thread_count:
-                self.post_processing_thread_count = 1
-
-        #why do we need this check?
-        if not self.min_space: self.min_space = 0
 
 class Filter():
     def __init__(self, parser, settings):
