@@ -2,29 +2,32 @@
 {% block head %}
     {{ super() }}
     <title>MFCRecorder - wanted</title>
-    <link rel="stylesheet" href="/static/css/wanted.css" type="text/css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/wanted.css') }}" type="text/css" />
+    <script src="{{ url_for('static', filename='js/sorter.js') }}"></script>
 {% endblock %}
 {% block body %}
-    <div class="header">
-        <div class="entry w10">UID</div>
-        <div class="entry w10">enabled</div>
-        <div class="entry w10">mode</div>
-        <div class="entry w10">custom name</div>
-        <div class="entry w10">comment</div>
-        <div class="entry w10">min viewers</div>
-        <div class="entry w10">stop viewers</div>
-        <div class="entry w10">priority</div>
+    <div id="thead" class="header">
+        <div class="entry w10" data-type="int" data-name="uid">UID</div>
+        <div class="entry w10" data-type="str" data-name="enabled">enabled</div>
+        <div class="entry w10" data-type="int" data-name="mode">mode</div>
+        <div class="entry w10" data-type="str" data-name="custom_name">custom name</div>
+        <div class="entry w10" data-type="str" data-name="comment">comment</div>
+        <div class="entry w10" data-type="int" data-name="min_viewers">min viewers</div>
+        <div class="entry w10" data-type="int" data-name="stop_viewers">stop viewers</div>
+        <div class="entry w10" data-type="int" data-name="priority">priority</div>
     </div>
-    {% for uid, settings in wanted.items() %}
-        <div class="entry-row">
-            <div class="entry w10">{{uid}}</div>
-            <div class="entry w10">{{settings['enabled']}}</div>
-            <div class="entry w10">{{settings['list_mode']}}</div>
-            <div class="entry w10">{{settings['custom_name']}}</div>
-            <div class="entry w10">{{settings['comment']}}</div>
-            <div class="entry w10">{{settings['min_viewers']}}</div>
-            <div class="entry w10">{{settings['stop_viewers']}}</div>
-            <div class="entry w10">{{settings['priority']}}</div>
-        </div>
-    {% endfor %}
+    <div id="tbody">
+        {% for uid, settings in wanted.items() %}
+            <div class="entry-row">
+                <div class="entry w10" data-name="uid">{{uid}}</div>
+                <div class="entry w10" data-name="enabled">{{settings['enabled']}}</div>
+                <div class="entry w10" data-name="mode">{{settings['list_mode']}}</div>
+                <div class="entry w10" data-name="custom_name">{{settings['custom_name']}}</div>
+                <div class="entry w10" data-name="comment">{{settings['comment']}}</div>
+                <div class="entry w10" data-name="min_viewers">{{settings['min_viewers']}}</div>
+                <div class="entry w10" data-name="stop_viewers">{{settings['stop_viewers']}}</div>
+                <div class="entry w10" data-name="priority">{{settings['priority']}}</div>
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}
