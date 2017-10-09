@@ -1,12 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+{% extends 'layout.html' %}
+{% block head %}
+    {{ super() }}
     <title>MFCRecorder - wanted</title>
-    <link rel="stylesheet" href="/static/css/style.css" type="text/css" media="all">
-    <link rel="stylesheet" href="/static/css/wanted.css" type="text/css" media="all">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/css/wanted.css" type="text/css">
+{% endblock %}
+{% block body %}
     <div class="header">
         <div class="entry w10">UID</div>
         <div class="entry w10">enabled</div>
@@ -29,4 +27,4 @@
             <div class="entry w10">{{settings['priority']}}</div>
         </div>
     {% endfor %}
-</body>
+{% endblock %}
