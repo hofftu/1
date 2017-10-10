@@ -8,6 +8,9 @@
         {% endblock %}
     </head>
     <body>
+        {% if session.logged_in %}
+            <div><a href="{{ url_for('logout') }}">logout</a></div>
+        {% endif %}
         {% for message in get_flashed_messages() %}
             <div class="flash">{{ message }}</div>
         {% endfor %}

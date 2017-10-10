@@ -22,6 +22,8 @@ class Settings():
         self.min_space = parser.getint('settings', 'minSpace')
         self.completed_directory = make_absolute(parser.get('paths', 'completed_directory').lower())
         self.priority = parser.getint('settings', 'priority')
+        self.username = parser.get('web', 'username')
+        self.password = parser.get('web', 'password')
 
 class Filter():
     def __init__(self, parser, settings):

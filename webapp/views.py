@@ -14,10 +14,9 @@ def check_login():
 def login():
     error = None
     if flask.request.method == 'POST':
-        if flask.request.form['username'] != 'foo':
-            error = 'Invalid username'
-        elif flask.request.form['password'] != 'bar':
-            error = 'Invalid password'
+        if (flask.request.form['username'] != CONFIG.settings.username
+                or flask.request.form['password'] != CONFIG.settings.password):
+            error = 'Invalid username/password'
         else:
             flask.session['logged_in'] = True
             flask.flash('Successfully logged in!')
