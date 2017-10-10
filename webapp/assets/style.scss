@@ -18,9 +18,40 @@
 }
 
 .ascending::after{
-    content: "▲";
+    content: "\25B2"; //▲
 }
 
 .descending::after{
-    content: "▼";
+    content: "\25BC"; //▼
+}
+
+.tooltip{
+    position: relative;
+    display: inline-block;
+    background-color: #A7A7A7;
+    border-radius: 20px;
+    padding: 0 2px;
+
+    &::after{
+        content: "\2753"; //❓
+    }
+
+    &__text{
+        visibility: hidden;
+        background-color: #555;
+        color: white;
+        padding: 0 5px;
+        border-radius: 6px;
+        position: absolute;
+        z-index: 1;
+        margin-top: 25px;
+    }
+
+    &:hover &__text{
+        visibility: visible;
+    }
+}
+
+h1{
+    text-transform: uppercase;
 }
