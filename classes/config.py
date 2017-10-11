@@ -5,6 +5,7 @@ import platform
 import ctypes
 import json
 import threading
+import ast
 
 LIST_MODE_WANTED = 0
 LIST_MODE_BLACKLISTED = 1
@@ -165,8 +166,37 @@ class Wanted():
             with open(self._settings.wishlist_path, 'r+') as file:
                 self.dict = {int(uid): data for uid, data in json.load(file).items()}
 
+    def _save(self):
+        with open(self._settings.wishlist_path, 'w') as file:
+            json.dump(self.dict, file, indent=4)
+
+    def set_dict(self, data):
+        '''expects dictionary with uid:key as keys and value as value'''
+        def try_eval(val):
+            try:
+                val = ast.literal_eval(val)
+            except (ValueError, SyntaxError):
+                pass
+            return val
+
+        #building the new wanted dict
+        new = {}
+        for key, value in data.items():
+            uid, key = key.split(':')
+            uid = int(uid)
+            #relies on enabled being the first argument that is passed per model, maybe a bit dirty
+            if key == 'enabled':
+                new[uid] = {}
+            print(value)
+            new[uid][key] = try_eval(value)
+
+        with self._lock:
+            self.dict = new
+            self._save()
+
     def set_data(self, uid, enabled=True, list_mode=LIST_MODE_WANTED,
                  custom_name='', comment='', min_viewers=0, stop_viewers=0, priority=0):
+        '''same as set_data_dict, but takes named arguments instead of a dict'''
         data = {
             'enabled': enabled,
             'list_mode': list_mode,
@@ -182,8 +212,7 @@ class Wanted():
         '''set data dictionary for model uid, existing or not'''
         with self._lock:
             self.dict[uid] = data
-            with open(self._settings.wishlist_path, 'w') as file:
-                json.dump(self.dict, file, indent=4)
+            self._save()
 
     def is_wanted(self, uid):
         '''determines if model is enabled and wanted'''

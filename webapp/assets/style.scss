@@ -6,15 +6,24 @@
 
 .entry{
     display: inline-block;
+    background-color: inherit;
 
     &-row:nth-child(2n){
         background-color: #DADADA;
     }
 }
 
+.num{
+    text-align: right;
+}
+
 .header{
     border-bottom: 2px solid black;
     font-weight: bold;
+
+    & > .entry{
+        cursor: pointer;
+    }
 }
 
 .ascending::after{

@@ -19,12 +19,15 @@ function orderRow(btn) {
     function getValue(row) {
         for (var i = 0; i < row.children.length; i++) {
             if (row.children[i].getAttribute("data-name") == orderCol) {
-                var result = row.children[i].innerHTML;
+                var result = row.children[i].value;
                 if (btn.getAttribute("data-type") == "int") {
                     result = parseInt(result);
                 }
                 else if (btn.getAttribute("data-type") == "str") {
                     result = result.toLowerCase();
+                }
+                else if (btn.getAttribute("data-type") == "bool"){
+                    result = row.children[i].checked;
                 }
                 return result;
             }

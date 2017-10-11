@@ -32,9 +32,16 @@ def logout():
 def start_page():
     return check_login() or flask.render_template('start_page.html')
 
-@app.route('/MFC/wanted')
+@app.route('/MFC/wanted', methods=['GET', 'POST'])
 def wanted():
-    return check_login() or flask.render_template('wanted.html', wanted=CONFIG.filter.wanted.dict)
+    check = check_login()
+    if check is not None:
+        return check
+
+    if flask.request.method == 'POST':
+        CONFIG.filter.wanted.set_dict(flask.request.form)
+
+    return flask.render_template('wanted.html', wanted=CONFIG.filter.wanted.dict)
 
 @app.route('/MFC/config', methods=['GET', 'POST'])
 def config():
