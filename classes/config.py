@@ -11,36 +11,50 @@ LIST_MODE_BLACKLISTED = 1
 
 class Settings():
     def __init__(self, parser, make_absolute):
-        self.save_directory = make_absolute(parser.get('paths', 'save_directory'))
-        self.wishlist_path = make_absolute(parser.get('paths', 'wishlist'))
-        self.interval = parser.getint('settings', 'checkInterval')
+        self._make_absolute = make_absolute
+        self.conf_save_directory = parser.get('paths', 'save_directory')
+        self.conf_wishlist_path = parser.get('paths', 'wishlist_path')
+        self.interval = parser.getint('settings', 'check_interval')
         self.directory_structure = parser.get('paths', 'directory_structure').lower()
-        self.post_processing_command = parser.get('settings', 'postProcessingCommand')
-        self.post_processing_thread_count = parser.getint('settings', 'postProcessingThreads')
+        self.post_processing_command = parser.get('settings', 'post_processing_command')
+        self.post_processing_thread_count = parser.getint('settings', 'post_processing_thread_count')
         self.port = parser.getint('web', 'port')
         self.web_enabled = parser.getboolean('web', 'enabled')
-        self.min_space = parser.getint('settings', 'minSpace')
-        self.completed_directory = make_absolute(parser.get('paths', 'completed_directory').lower())
+        self.min_space = parser.getint('settings', 'min_space')
+        self.conf_completed_directory = parser.get('paths', 'completed_directory').lower()
         self.priority = parser.getint('settings', 'priority')
         self.username = parser.get('web', 'username')
         self.password = parser.get('web', 'password')
+    
+    @property
+    def save_directory(self):
+        return self._make_absolute(self.conf_save_directory)
+
+    @property
+    def wishlist_path(self):
+        return self._make_absolute(self.conf_wishlist_path)
+
+    @property
+    def completed_directory(self):
+        return self._make_absolute(self.conf_completed_directory)
 
 class Filter():
     def __init__(self, parser, settings):
-        self.newer_than_hours = parser.getint('AutoRecording', 'newerThanHours')
-        self.score = parser.getint('AutoRecording', 'score')
-        self.auto_stop_viewers = parser.getint('AutoRecording', 'autoStopViewers')
-        self.stop_viewers = parser.getint('settings', 'StopViewers')
-        self.min_tags = max(1, parser.getint('AutoRecording', 'minTags'))
-        self.wanted_tags = {s.strip().lower() for s in parser.get('AutoRecording', 'tags').split(',')}
+        self.newer_than_hours = parser.getint('auto_recording', 'newer_than_hours')
+        self.score = parser.getint('auto_recording', 'score')
+        self.auto_stop_viewers = parser.getint('auto_recording', 'auto_stop_viewers')
+        self.stop_viewers = parser.getint('settings', 'stop_viewers')
+        self.min_tags = max(1, parser.getint('auto_recording', 'min_tags'))
+        self.wanted_tags = {s.strip().lower() for s in parser.get('auto_recording', 'tags').split(',')}
         #account for when stop is greater than min
-        self.min_viewers = max(self.stop_viewers, parser.getint('settings', 'minViewers'))
-        self.viewers = max(self.auto_stop_viewers, parser.getint('AutoRecording', 'viewers'))
+        self.min_viewers = max(self.stop_viewers, parser.getint('settings', 'min_viewers'))
+        self.viewers = max(self.auto_stop_viewers, parser.getint('auto_recording', 'viewers'))
 
         self.wanted = Wanted(settings)
 
 class Config():
     def __init__(self, config_file_path):
+        self._lock = threading.Lock()
         self._config_file_path = config_file_path
         self._parser = configparser.ConfigParser()
         self.refresh()
@@ -66,7 +80,22 @@ class Config():
         self._available_space = self._get_free_diskspace()
 
     def _parse(self):
-        self._parser.read(self._config_file_path)
+        with self._lock:
+            self._parser.read(self._config_file_path)
+
+    def update(self, data):
+        '''expects a dictionary with section:option as key and the value as value'''
+        #will delete comments in the config, but when this method is used, config was edited in webapp,
+        #so there are comments there and in the sample config
+        with self._lock:
+            for key, value in data.items():
+                section, option = key.split(':')
+                self._parser.set(section, option, value)
+            self._write()
+
+    def _write(self):
+        with open(self._config_file_path, 'w') as target:
+            self._parser.write(target)
 
     #maybe belongs more into a filter class, but then we would have to create one
     def does_model_pass_filter(self, model):

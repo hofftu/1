@@ -86,7 +86,7 @@
 {% endset %}
 
 {% set score_tooltip %}
-
+    <p>start recording if camscore is greater than "score" variable</p>
 {% endset %}
 
 {% set newer_than_hours_tooltip %}
@@ -109,29 +109,29 @@
 {% block body %}
     <form id="form" action="{{ url_for('config') }}" method="POST">
         <h1>paths</h1>
-        {{ input('wishlist_path', 'wishlist', config.settings.wishlist_path, wishlist_tooltip) }}
-        {{ input('save_directory', 'save directory', config.settings.save_directory) }}
-        {{ input('directory_structure', 'directory structure', config.settings.directory_structure, directory_structure_tooltip) }}
-        {{ input('completed_directory', 'completed directory', config.settings.completed_directory, completed_directory_tooltip) }}
+        {{ input('paths:wishlist_path', 'wishlist', config.settings.conf_wishlist_path, wishlist_tooltip) }}
+        {{ input('paths:save_directory', 'save directory', config.settings.conf_save_directory) }}
+        {{ input('paths:directory_structure', 'directory structure', config.settings.directory_structure, directory_structure_tooltip) }}
+        {{ input('paths:completed_directory', 'completed directory', config.settings.conf_completed_directory, completed_directory_tooltip) }}
         <h1>settings</h1>
-        {{ input('interval', 'check interval', config.settings.interval) }}
-        {{ input('min_space', 'minimum space', config.settings.min_space, min_space_tooltip) }}
-        {{ input('post_processing_command', 'post processing command', config.settings.post_processing_command, post_processing_command_tooltip) }}
-        {{ input('post_processing_thread_count', 'post processing thread count', config.settings.post_processing_thread_count, post_processing_thread_count_tooltip) }}
+        {{ input('settings:check_interval', 'check interval', config.settings.interval) }}
+        {{ input('settings:min_space', 'minimum space', config.settings.min_space, min_space_tooltip) }}
+        {{ input('settings:post_processing_command', 'post processing command', config.settings.post_processing_command, post_processing_command_tooltip, 'w60') }}
+        {{ input('settings:post_processing_thread_count', 'post processing thread count', config.settings.post_processing_thread_count, post_processing_thread_count_tooltip) }}
         <!-- min_viewers and stop_viewers omitted because currently ignored in the script -->
-        {{ input('priority', 'priority', config.settings.priority, priority_tooltip) }}
+        {{ input('settings:priority', 'priority', config.settings.priority, priority_tooltip) }}
         <h1>auto recording</h1>
-        {{ input('viewers', 'viewers', config.filter.viewers, viewers_tooltip) }}
-        {{ input('auto_stop_viewers', 'auto stop viewers', config.filter.auto_stop_viewers, auto_stop_viewers_tooltip) }}
-        {{ input('score', 'score', config.filter.score, score_tooltip) }}
-        {{ input('newer_than_hours', 'newer than (hours)', config.filter.newer_than_hours, newer_than_hours_tooltip) }}
-        {{ input('tags', 'tags', config.filter.tags, tags_tooltip) }}
-        {{ input('min_tags', 'minimum tags', config.filter.min_tags, min_tags_tooltip) }}
+        {{ input('auto_recording:viewers', 'viewers', config.filter.viewers, viewers_tooltip) }}
+        {{ input('auto_recording:auto_stop_viewers', 'auto stop viewers', config.filter.auto_stop_viewers, auto_stop_viewers_tooltip) }}
+        {{ input('auto_recording:score', 'score', config.filter.score, score_tooltip) }}
+        {{ input('auto_recording:newer_than_hours', 'newer than (hours)', config.filter.newer_than_hours, newer_than_hours_tooltip) }}
+        {{ input('auto_recording:tags', 'tags', config.filter.tags, tags_tooltip) }}
+        {{ input('auto_recording:min_tags', 'minimum tags', config.filter.min_tags, min_tags_tooltip) }}
         <h1>web</h1>
-        {{ input('port', 'port', config.settings.port) }}
-        {{ input('web_enabled', 'enabled', config.settings.web_enabled) }}
-        {{ input('username', 'username', config.settings.username) }}
-        {{ input('password', 'password', config.settings.password, password_tooltip, type='password') }}
+        {{ input('web:port', 'port', config.settings.port) }}
+        {{ input('web:enabled', 'enabled', config.settings.web_enabled) }}
+        {{ input('web:username', 'username', config.settings.username) }}
+        {{ input('web:password', 'password', config.settings.password, password_tooltip, type='password') }}
         <input type="submit" value="save" />
     </form>
 {% endblock %}

@@ -43,6 +43,6 @@ def config():
         return check
 
     if flask.request.method == 'POST':
-        print(flask.request.form)
+        CONFIG.update(flask.request.form)
 
     return flask.render_template('config.html', config=CONFIG)
