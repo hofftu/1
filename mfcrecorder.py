@@ -5,10 +5,7 @@ import sys
 import threading
 from distutils.version import StrictVersion
 import mfcauto
-import classes.config
-import classes.models
-import classes.recording
-import classes.postprocessing
+import classes
 
 if __name__ == '__main__':
     if StrictVersion(mfcauto.__version__) < StrictVersion('0.1.4'):

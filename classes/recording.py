@@ -3,7 +3,7 @@ import datetime
 import os
 import livestreamer
 from colorama import Fore
-import classes.postprocessing
+import classes.postprocessing as postprocessing
 
 def start_recording(session, settings):
     '''starts recording a session if it is not already being recorded'''
