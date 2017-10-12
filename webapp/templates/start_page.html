@@ -6,4 +6,19 @@
 {% block body %}
     <a href="{{ url_for('wanted') }}">wanted</a>
     <a href="{{ url_for('config') }}">config</a>
+    <form action="{{ url_for('add') }}" method="POST">
+        <input type="text" name="uid_or_name" placeholder="uid or name" />
+        <input type="submit" value="add" />
+        <input type="submit" value="remove" formaction="{{ url_for('remove') }}" />
+    </form>
+    {% for uid, session in recording.items() %}
+        <div>
+            <div>{{ uid }}</div>
+            <div>{{ session['nm'] }}</div>
+            <div>{{ session['rc'] }}</div>
+            <div>{{ session['condition'] }}</div>
+        </div>
+    {% else %}
+        <div>no recordings</div>
+    {% endfor %}
 {% endblock %}

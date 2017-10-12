@@ -5,7 +5,7 @@ import platform
 import ctypes
 import json
 import threading
-import ast
+import classes.helpers as helpers
 
 LIST_MODE_WANTED = 0
 LIST_MODE_BLACKLISTED = 1
@@ -165,7 +165,7 @@ class Config():
 
 class Wanted():
     def __init__(self, settings):
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._settings = settings
         #create new empty wanted file
         try:
@@ -186,12 +186,6 @@ class Wanted():
 
     def set_dict(self, data):
         '''expects dictionary with uid:key as keys and value as value'''
-        def try_eval(val):
-            try:
-                val = ast.literal_eval(val)
-            except (ValueError, SyntaxError):
-                pass
-            return val
 
         #building the new wanted dict
         new = {}
@@ -202,15 +196,30 @@ class Wanted():
             if key == 'enabled':
                 new[uid] = {}
             print(value)
-            new[uid][key] = try_eval(value)
+            new[uid][key] = helpers.try_eval(value)
 
         with self._lock:
             self.dict = new
             self._save()
 
-    def set_data(self, uid, enabled=True, list_mode=LIST_MODE_WANTED,
+    def add(self, uid, custom_name='', list_mode=LIST_MODE_WANTED):
+        '''Adds model to dict and returns None. If already existing, returns model settings.'''
+        with self._lock:
+            settings = self.dict.get(uid)
+            if settings is not None:
+                return settings
+            self._set_data(uid, list_mode=list_mode, custom_name=custom_name)
+
+    def remove(self, uid):
+        '''removes model from dict and returns settings, if not existing returns None'''
+        with self._lock:
+            result = self.dict.pop(uid, None)
+            self._save()
+            return result
+
+    def _set_data(self, uid, enabled=True, list_mode=LIST_MODE_WANTED,
                  custom_name='', comment='', min_viewers=0, stop_viewers=0, priority=0):
-        '''same as set_data_dict, but takes named arguments instead of a dict'''
+        '''same as _set_data_dict, but takes named arguments instead of a dict'''
         data = {
             'enabled': enabled,
             'list_mode': list_mode,
@@ -220,10 +229,11 @@ class Wanted():
             'stop_viewers': stop_viewers,
             'priority': priority,
         }
-        self.set_data_dict(uid, data)
+        with self._lock:
+            self._set_data_dict(uid, data)
 
-    def set_data_dict(self, uid, data):
-        '''set data dictionary for model uid, existing or not'''
+    def _set_data_dict(self, uid, data):
+        '''Set data dictionary for model uid, existing or not'''
         with self._lock:
             self.dict[uid] = data
             self._save()

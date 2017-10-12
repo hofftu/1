@@ -41,6 +41,21 @@ def get_online_models():
 
     return models
 
+def get_model(uid_or_name):
+    '''returns a tuple with uid and name'''
+    async def query(loop):
+        client = mfcauto.Client(loop)
+        await client.connect(False)
+        msg = await client.query_user(uid_or_name)
+        client.disconnect()
+        return msg
+    
+    #asyncio in a threaded environment...
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    msg = loop.run_until_complete(query(loop))
+    return msg if msg is None else (msg['uid'], msg['nm'])
+
 class Model():
     '''custom Model class to preserve the session information'''
     def __init__(self, model):
