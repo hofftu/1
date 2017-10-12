@@ -125,7 +125,7 @@
         {{ input('auto_recording:auto_stop_viewers', 'auto stop viewers', config.filter.auto_stop_viewers, auto_stop_viewers_tooltip) }}
         {{ input('auto_recording:score', 'score', config.filter.score, score_tooltip) }}
         {{ input('auto_recording:newer_than_hours', 'newer than (hours)', config.filter.newer_than_hours, newer_than_hours_tooltip) }}
-        {{ input('auto_recording:tags', 'tags', config.filter.tags, tags_tooltip) }}
+        {{ input('auto_recording:tags', 'tags', config.filter.wanted_tags_str, tags_tooltip) }}
         {{ input('auto_recording:min_tags', 'minimum tags', config.filter.min_tags, min_tags_tooltip) }}
         <h1>web</h1>
         {{ input('web:port', 'port', config.settings.port) }}

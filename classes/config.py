@@ -46,12 +46,25 @@ class Filter():
         self.auto_stop_viewers = parser.getint('auto_recording', 'auto_stop_viewers')
         self.stop_viewers = parser.getint('settings', 'stop_viewers')
         self.min_tags = max(1, parser.getint('auto_recording', 'min_tags'))
-        self.wanted_tags = {s.strip().lower() for s in parser.get('auto_recording', 'tags').split(',')}
+        self._wanted_tags_str = parser.get('auto_recording', 'tags')
+        self._update_tags()
         #account for when stop is greater than min
         self.min_viewers = max(self.stop_viewers, parser.getint('settings', 'min_viewers'))
         self.viewers = max(self.auto_stop_viewers, parser.getint('auto_recording', 'viewers'))
 
         self.wanted = Wanted(settings)
+
+    @property
+    def wanted_tags_str(self):
+        return self._wanted_tags_str
+
+    @wanted_tags_str.setter
+    def wanted_tags_str(self, value):
+        self._wanted_tags_str = value
+        self._update_tags()
+
+    def _update_tags(self):
+        self.wanted_tags = {s.strip().lower() for s in self._wanted_tags_str.split(',')}
 
 class Config():
     def __init__(self, config_file_path):
@@ -93,6 +106,7 @@ class Config():
                 section, option = key.split(':')
                 self._parser.set(section, option, value)
             self._write()
+        self.refresh()
 
     def _write(self):
         with open(self._config_file_path, 'w') as target:
