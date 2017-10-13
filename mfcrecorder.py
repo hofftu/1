@@ -21,7 +21,7 @@ if __name__ == '__main__':
         webapp.views.init_data(config)
         threading.Thread(
             target=webapp.app.run,
-            kwargs={'host':'0.0.0.0', 'port': config.settings.port, 'threaded':'True'}
+            kwargs={'host':'0.0.0.0', 'port': config.settings.port, 'threaded':'True', 'ssl_context':('certs/snakeoil.cert', 'certs/snakeoil.key')}
         ).start()
 
     next_run = datetime.datetime.now()
