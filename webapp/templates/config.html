@@ -109,8 +109,12 @@
     <p>set the minimum number of tags required to start recording a model.</p>
 {% endset %}
 
-{% set password_tooltip %}
-    <p>Don't reuse any password here, as this will not be hashed and stored in plaintext, so it is easily readable. This is only used to not let anybody enter the web-frontend.</p>
+{% set old_password_tooltip %}
+    <p>Old password. Only required for password changes.</p>
+{% endset %}
+
+{% set new_password_tooltip %}
+    <p>Type your new password twice. Leave empty if no password change is wanted.</p>
 {% endset %}
 
 {% block body %}
@@ -138,7 +142,9 @@
         {{ input('web:port', 'port', config.settings.port, type='number') }}
         {{ input('web:enabled', 'enabled', config.settings.web_enabled, type='checkbox') }}
         {{ input('web:username', 'username', config.settings.username) }}
-        {{ input('web:password', 'password', config.settings.password, password_tooltip, type='password') }}
+        {{ input('password0', 'old password', '', old_password_tooltip, type='password') }}
+        {{ input('password1', 'new password', '', new_password_tooltip, type='password') }}
+        {{ input('password2', 'repeat new password', '', type='password') }}
         <input type="submit" value="save" />
     </form>
 {% endblock %}

@@ -82,15 +82,20 @@ h1{
     border-radius: 5px;
 
     &--error{
-        background-color: red;
+        background-color: #FF0000;
     }
 
     &--info{
-        background-color: yellow;
+        background-color: #FFFF5F;
     }
 
     &--success{
-        background-color: green;
+        background-color: #4DBE4D;
+    }
+
+    &--message{
+        //default when no flash style was set
+        background-color: #6A6AFF;
     }
 }
 

@@ -16,7 +16,7 @@ def login():
     error = None
     if flask.request.method == 'POST':
         if (flask.request.form['username'] != CONFIG.settings.username
-                or flask.request.form['password'] != CONFIG.settings.password):
+                or not classes.helpers.verify_password(flask.request.form['password'], CONFIG.settings.password)):
             error = 'Invalid username/password'
         else:
             flask.session['logged_in'] = True
@@ -51,7 +51,28 @@ def config():
         return check
 
     if flask.request.method == 'POST':
-        CONFIG.update(flask.request.form)
+        #special treatment for password
+        #form data is immutable dict, we want to edit that here
+        #dict(form) would give us a list of values per key (since it allows multiple values per key)
+        #when iterating over form.items(), we only get the first entry per key, so we do that here
+        #(mutliple entries for bool values, since they always send False and only additionally True)
+        dict_ = {key:value for key, value in flask.request.form.items()}
+        print(dict_)
+        old = dict_.pop('password0')
+        pw1 = dict_.pop('password1')
+        pw2 = dict_.pop('password2')
+        if old != '':
+            if not classes.helpers.verify_password(old, CONFIG.settings.password):
+                flask.flash('wrong old password, new password not set', 'error')
+            elif pw1 != pw2:
+                flask.flash('new passwords didn\'t match, new password not set', 'error')
+            elif pw1 == '':
+                flask.flash('new password is empty, not setting new password', 'error')
+            else:
+                dict_['web:password'] = classes.helpers.hash_password(pw1)
+
+        CONFIG.update(dict_)
+        flask.flash('settings have been saved', 'success')
 
     return flask.render_template('config.html', config=CONFIG)
 
