@@ -47,6 +47,7 @@ class Filter():
         self.stop_viewers = parser.getint('settings', 'stop_viewers')
         self.min_tags = max(1, parser.getint('auto_recording', 'min_tags'))
         self._wanted_tags_str = parser.get('auto_recording', 'tags')
+        self.tag_min_viewers = parser.getint('auto_recording', 'min_viewers')
         self._update_tags()
         #account for when stop is greater than min
         self.min_viewers = max(self.stop_viewers, parser.getint('settings', 'min_viewers'))
@@ -128,7 +129,7 @@ class Config():
             return False
         if f.wanted_tags:
             matches = f.wanted_tags.intersection(model.tags if model.tags is not None else [])
-            if len(matches) >= f.min_tags:
+            if len(matches) >= f.min_tags and model.session['rc'] >= f.tag_min_viewers:
                 model.session['condition'] = '({})_'.format(','.join(matches))
                 return True
         if f.newer_than_hours and model.session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
