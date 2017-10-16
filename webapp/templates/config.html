@@ -138,6 +138,8 @@
         {{ input('auto_recording:newer_than_hours', 'newer than (hours)', config.filter.newer_than_hours, newer_than_hours_tooltip, type='number') }}
         {{ input('auto_recording:tags', 'tags', config.filter.wanted_tags_str, tags_tooltip) }}
         {{ input('auto_recording:min_tags', 'minimum tags', config.filter.min_tags, min_tags_tooltip, type='number') }}
+        {{ input('auto_recording:tag_viewers', 'tag viewers', config.filter.tag_viewers, type='number') }}
+        {{ input('auto_recording:tag_stop_viewers', 'tag stop viewers', config.filter.tag_stop_viewers, type='number') }}
         <h1>web</h1>
         {{ input('web:port', 'port', config.settings.port, type='number') }}
         {{ input('web:enabled', 'enabled', config.settings.web_enabled, type='checkbox') }}
