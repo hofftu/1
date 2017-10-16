@@ -31,7 +31,9 @@ def logout():
 
 @app.route('/')
 def start_page():
-    return check_login() or flask.render_template('start_page.html', recording=classes.recording.RecordingThread.currently_recording_models)
+    return check_login() or flask.render_template(
+        'start_page.html', recording=classes.recording.RecordingThread.currently_recording_models,
+        condition_text=classes.helpers.condition_text)
 
 @app.route('/MFC/wanted', methods=['GET', 'POST'])
 def wanted():
@@ -76,7 +78,7 @@ def config():
 
     return flask.render_template('config.html', config=CONFIG)
 
-@app.route('/MFC/add', methods=['POST'])
+@app.route('/MFC/add', methods=['GET'])
 def add():
     return check_login() or add_or_remove(_add)
 
@@ -87,7 +89,7 @@ def _add(uid, name):
     else:
         flask.flash('{} with uid {} already in wanted list (named "{}")'.format(name, uid, result['custom_name']), 'info')
 
-@app.route('/MFC/remove', methods=['POST'])
+@app.route('/MFC/remove', methods=['GET'])
 def remove():
     return check_login() or add_or_remove(_remove)
 
@@ -99,10 +101,18 @@ def _remove(uid, name):
         flask.flash('{} with uid {} not in wanted list'.format(name, uid), 'info')
 
 def add_or_remove(action):
-    uid_or_name = classes.helpers.try_eval(flask.request.form['uid_or_name'])
+    uid_or_name = classes.helpers.try_eval(flask.request.args['uid_or_name'])
     result = classes.models.get_model(uid_or_name)
     if result is None:
         flask.flash('uid or name "{}" not found'.format(uid_or_name), 'error')
     else:
         action(*result)
     return flask.redirect(flask.url_for('start_page'))
+
+@app.route('/MFC/thumbnails/<uid>')
+def thumbnail(uid):
+    try:
+        raise NotImplementedError
+    except:
+        flask.abort(404)
+    return flask.send_file('')

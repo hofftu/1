@@ -2,6 +2,7 @@ import ast
 import os
 import hashlib
 import base64
+import enum
 
 def try_eval(val):
     try:
@@ -28,3 +29,23 @@ def verify_password(password, hash_):
     hash_ = base64.b64decode(hash_.encode('ascii'))
     salt = hash_[32:]
     return _hash_password(password, salt) == hash_
+
+class Condition(enum.IntEnum):
+    WANTED = 0
+    TAGS = 1
+    VIEWERS = 2
+    NEW = 3
+    SCORE = 4
+
+def condition_text(condition, text='', upper=False):
+    texts = {
+        0: 'wanted',
+        1: 'tags',
+        2: 'viewers',
+        3: 'new',
+        4: 'score',
+    }
+    if text:
+        return '({})'.format(text)
+    condition = texts[condition].upper() if upper else texts[condition]
+    return condition

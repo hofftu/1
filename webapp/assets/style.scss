@@ -104,3 +104,13 @@ h1{
     80%  { margin-top: 0; }
     100% { margin-top: -300px; }
 }
+
+.model-tile{
+    display: inline-block;
+
+    & > img{
+        object-fit: cover;
+        width: 100%;
+        height: 7.5rem;
+    }
+}

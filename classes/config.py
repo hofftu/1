@@ -124,23 +124,24 @@ class Config():
             if model.session['rc'] < max(m_settings['min_viewers'], m_settings['stop_viewers']):
                 return False
             else:
-                model.session['condition'] = ''
+                model.session['condition'] = helpers.Condition.WANTED
                 return True
         if f.wanted.is_blacklisted(model.uid):
             return False
         if f.wanted_tags:
             matches = f.wanted_tags.intersection(model.tags if model.tags is not None else [])
             if len(matches) >= f.min_tags and model.session['rc'] >= f.tag_viewers:
-                model.session['condition'] = '({})_'.format(','.join(matches))
+                model.session['condition'] = helpers.Condition.TAGS
+                model.session['condition-text'] = ','.join(matches)
                 return True
         if f.newer_than_hours and model.session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
-            model.session['condition'] = 'NEW_'
+            model.session['condition'] = helpers.Condition.NEW
             return True
         if f.score and model.session['camscore'] > f.score:
-            model.session['condition'] = 'SCORE_'
+            model.session['condition'] = helpers.Condition.SCORE
             return True
         if f.viewers and model.session['rc'] > f.viewers:
-            model.session['condition'] = 'VIEWERS_'
+            model.session['condition'] = helpers.Condition.VIEWERS
             return True
         return False
 
@@ -157,11 +158,11 @@ class Config():
         '''determines whether a recording should continue'''
         #would it be possible that no entry is existing if we are already recording?
         #TODO: global stop_viewers if no model specific is set??
-        if session['condition'] == 'VIEWERS_':
+        if session['condition'] == helpers.Condition.VIEWERS:
             min_viewers = self.filter.auto_stop_viewers
-        elif session['condition'] == '':
+        elif session['condition'] == helpers.Condition.WANTED:
             min_viewers = self.filter.wanted.dict[session['uid']]['stop_viewers']
-        elif session['condition'][0] == '(':
+        elif session['condition'] == helpers.Condition.TAGS:
             min_viewers = self.filter.tag_stop_viewers
         else:
             min_viewers = 0

@@ -4,6 +4,7 @@ import os
 import livestreamer
 from colorama import Fore
 import classes.postprocessing as postprocessing
+import classes.helpers as helpers
 
 def start_recording(session, settings):
     '''starts recording a session if it is not already being recorded'''
@@ -86,4 +87,5 @@ class RecordingThread(threading.Thread):
             path=self.config.settings.save_directory, model=self.session['nm'], uid=self.session['uid'],
             seconds=time.strftime("%S"), day=time.strftime("%d"),
             minutes=time.strftime("%M"), hour=time.strftime("%H"),
-            month=time.strftime("%m"), year=time.strftime("%Y"), auto=self.session['condition'])
+            month=time.strftime("%m"), year=time.strftime("%Y"),
+            auto='{}_'.format(helpers.condition_text(self.session['condition'], self.session.get('condition-text'), True)))
