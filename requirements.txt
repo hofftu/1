@@ -13,6 +13,9 @@ flask
 flask-scss
 
 
+opencv-python
+
+
 colorama
 
 

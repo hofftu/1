@@ -39,6 +39,7 @@ class RecordingThread(threading.Thread):
 
         start_time = datetime.datetime.now()
         file_path = self.create_path(self.config.settings.directory_structure, start_time)
+        self.session['dl_path'] = file_path
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with self._lock:
             self.file_count += 1

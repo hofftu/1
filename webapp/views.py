@@ -111,8 +111,15 @@ def add_or_remove(action):
 
 @app.route('/MFC/thumbnails/<uid>')
 def thumbnail(uid):
-    try:
-        raise NotImplementedError
-    except:
-        flask.abort(404)
-    return flask.send_file('')
+    #TODO: this might take very long and caching would probably be a good idea
+    uid = int(uid)
+    #try to get thumbnail from current video
+    result = classes.helpers.video_to_thumbnail(
+        classes.recording.RecordingThread.currently_recording_models.get(uid, {}).get('dl_path'))
+    if result is None:
+        #fallback to avatar from mfc
+        result = classes.helpers.get_avatar(uid)
+    if result is not None:
+        mimetype, img = result
+        return flask.send_file(img, mimetype=mimetype)
+    return flask.abort(404)
