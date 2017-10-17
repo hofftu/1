@@ -67,8 +67,8 @@ def video_to_thumbnail(video_path):
         return
 
     length = int(cap.get(cv2.CAP_PROP_FORMAT)) - 20
-    print(length)
-    cap.set(cv2.CAP_PROP_POS_FRAMES, length)
+    if (length > 0):
+        cap.set(cv2.CAP_PROP_POS_FRAMES, length)
 
     success, image = cap.read()
     if not success:
