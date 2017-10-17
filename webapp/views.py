@@ -114,8 +114,8 @@ def thumbnail(uid):
     #TODO: this might take very long and caching would probably be a good idea
     uid = int(uid)
     #try to get thumbnail from current video
-    result = classes.helpers.video_to_thumbnail(
-        classes.recording.RecordingThread.currently_recording_models.get(uid, {}).get('dl_path'))
+    result = classes.helpers.get_live_thumbnail(
+        uid, classes.recording.RecordingThread.currently_recording_models.get(uid, {}).get('camserv'))
     if result is None:
         #fallback to avatar from mfc
         result = classes.helpers.get_avatar(uid)

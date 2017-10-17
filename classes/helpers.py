@@ -85,8 +85,16 @@ def video_to_thumbnail(video_path):
 def get_avatar(uid):
     '''returns content type and content as BytesIO or None'''
     URL_TEMPLATE = "http://img.mfcimg.com/photos2/{}/{}/avatar.300x300.jpg"
+    return _get_img_from_url(URL_TEMPLATE.format(str(uid)[0:3], uid))
+
+def get_live_thumbnail(uid, camserver):
+    '''returns content type and content as BytesIO or None'''
+    URL_TEMPLATE = 'https://snap.mfcimg.com/snapimg/{}/320x240/mfc_{}'
+    return _get_img_from_url(URL_TEMPLATE.format(camserver - 500, uid + 100_000_000))
+
+def _get_img_from_url(url):
     try:
-        response = requests.get(URL_TEMPLATE.format(str(uid)[0:3], uid))
+        response = requests.get(url)
         #returns clear.gif if model was not found
         if response.status_code != 200 or 'clear.gif' in response.url:
             return
