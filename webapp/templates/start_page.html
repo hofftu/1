@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+{% block head %}
+    {{ super() }}
+    <title>welcome!</title>
+{% endblock %}
+{% block body %}
+    <form action="{{ url_for('add') }}">
+        <input type="text" name="uid_or_name" placeholder="uid or name" />
+        <input type="submit" value="add" />
+        <input type="submit" value="remove" formaction="{{ url_for('remove') }}" />
+    </form>
+    {% for uid, session in recording.items() %}
+        {% set is_wanted = uid in wanted %}
+        <div class="model-tile w10 {% if is_wanted %} model-tile--wanted {% endif %}">
+            <div>
+                <a title="profile" href="http://profiles.myfreecams.com/{{ session['nm'] }}" rel="noreferrer">
+                    {{ session['nm'] }}
+                </a>
+             ({{ session['rc'] }})
+            </div>
+            <div>{{ condition_text(session['condition'], session.get('condition-text')) }}</div>
+            <img alt="{{ session['nm'] }} thumbnail" src="{{ url_for('thumbnail', uid=uid) }}" />
+            <div>
+                {% if not is_wanted %}
+                    <a title="add to wanted list" href="{{ url_for('add') }}?uid_or_name={{ uid }}">add</a> | 
+                {% else %}
+                    <a title="remove from wanted list" href="{{ url_for('remove') }}?uid_or_name={{ uid }}">remove</a> | 
+                {% endif %}
+                <a title="chatroom on MFC" href="http://www.myfreecams.com/#{{ session['nm'] }}" rel="noreferrer">chat</a>
+            </div>
+        </div>
+    {% else %}
+        <div>no recordings</div>
+    {% endfor %}
+{% endblock %}

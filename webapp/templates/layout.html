@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% block head %}
+            <meta charset="UTF-8" />
+            <title>MFCRecorder</title>
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css" />
+        {% endblock %}
+    </head>
+    <body>
+        {% if session.logged_in %}
+            <div class="nav-bar">
+                <a class="w7" href="{{ url_for('start_page') }}">Home</a>
+                <a class="w7{% if request.path == url_for('wanted') %} active{% endif %}" href="{{ url_for('wanted') }}">Wanted</a>
+                <a class="w7{% if request.path == url_for('config') %} active{% endif %}" href="{{ url_for('config') }}">Config</a>
+                <a class="w7 break" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        {% endif %}
+        {% for category, message in get_flashed_messages(with_categories=True) %}
+            <div class="flash flash--{{ category }} w20">{{ message }}</div>
+        {% endfor %}
+        {% block body %}{% endblock %}
+    </body>
+</html>

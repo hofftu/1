@@ -79,7 +79,7 @@ python3.5 add.py AspenRae
 ## Web Interface (added Sep 4 2017)
 There is also a web interface now, although very limited. It currently only displays the recording models along with some system statistics. If you click on a models avatar, it will open their chatroom on myfreecams site. If you click on their name above their image, it will load their profile. Below their avatar it indicates the condition for their recording (wanted, tags, viewers...) as well as the number of viewers in their room at the moment. In addition to this, there is an "Add Model" text box where you can add a model by typing in their username and submitting it. (Doing anything with the web interface, html, or css is completely new to me, so I plan to add more features, but it will take me some time since Im learning as I go.)
 
-The default port is 8778, but it can be changed in the config file. So to view the web interface, open (http://127.0.0.1:8778/MFC) in any web browser (note the "/MFC after the port). If you want to access it from another computer on the same lan, replace the ip address with the ip address of that machine. 
+The default port is 8778, but it can be changed in the config file. So to view the web interface, open (https://127.0.0.1:8778/) in any web browser (note the https). If you want to access it from another computer on the same lan, replace the ip address with the ip address of that machine. 
 
 ![Image of web interface](https://i.imgur.com/9AlK3tm.jpg)
 

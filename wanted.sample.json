@@ -1,0 +1,20 @@
+{
+    "12345": {
+        //entry is activated if true, otherwise completely ignored
+        "enabled": true,
+        //0: wishlist, 1: blacklist
+        "list_mode": 0,
+        //custom name, not used yet, but models can change names
+        "custom_name": "Yada Yada",
+        //comment to maybe recognize the model or remember other stuff
+        "comment": "",
+        //Used instead of the global min_viewers from the config. Recording is only started if model has at least this amount of viewers.
+        //if stop_viewers is greater that this number, this number will be set to stop_viewers
+        "min_viewers": 0,
+        //Used instead of global stop_viewers. Recording is stopped if model has amount of viewers below this number.
+        "stop_viewers": 0,
+        //For when you want to not record everything, only the most important models. Higher number is greater priority.
+        //Priority is set in the config.con and models with priority below that number will be ignored.
+        "priority": 0
+    }
+}

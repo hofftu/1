@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block head %}
+    {{ super() }}
+    <title>MFCRecorder - wanted</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/wanted.css') }}" type="text/css" />
+    <script src="{{ url_for('static', filename='js/sorter.js') }}"></script>
+{% endblock %}
+{% block body %}
+    <form action="{{ url_for('wanted') }}" method="POST">
+        <input type="submit" value="save changes" />
+        <div id="thead" class="header">
+            <div class="entry w5"  data-type="int"  data-name="uid">UID</div>
+            <div class="entry w5"  data-type="bool" data-name="enabled">enabled</div>
+            <div class="entry w5"  data-type="int"  data-name="mode">mode</div>
+            <div class="entry w10" data-type="str"  data-name="custom_name">custom name</div>
+            <div class="entry w20" data-type="str"  data-name="comment">comment</div>
+            <div class="entry w5"  data-type="int"  data-name="min_viewers">min viewers</div>
+            <div class="entry w5"  data-type="int"  data-name="stop_viewers">stop viewers</div>
+            <div class="entry w5"  data-type="int"  data-name="priority">priority</div>
+        </div>
+        <div id="tbody">
+            {% for uid, settings in wanted.items() %}
+                <div class="entry-row">
+
+<input class="entry w5 num" name="{{uid}}:uid" value="{{uid}}" data-name="uid" disabled />
+
+<input type="checkbox" class="entry w5" name="{{uid}}:enabled" value="True" data-name="enabled" {% if settings['enabled'] %} checked {% endif %} />
+<input type="hidden" name="{{uid}}:enabled" value="False">
+
+<select class="entry w5" name="{{uid}}:list_mode" data-name="mode">
+    <option value="0" {% if settings['list_mode'] == 0 %} selected {% endif %}>whitelist</option>
+    <option value="1" {% if settings['list_mode'] == 1 %} selected {% endif %}>blacklist</option>
+</select>
+
+<input type="text"   class="entry w10"    name="{{uid}}:custom_name"  value="{{settings['custom_name']}}"  data-name="custom_name" />
+<input type="text"   class="entry w20"    name="{{uid}}:comment"      value="{{settings['comment']}}"      data-name="comment" />
+<input type="number" class="entry w5 num" name="{{uid}}:min_viewers"  value="{{settings['min_viewers']}}"  data-name="min_viewers" />
+<input type="number" class="entry w5 num" name="{{uid}}:stop_viewers" value="{{settings['stop_viewers']}}" data-name="stop_viewers" />
+<input type="number" class="entry w5 num" name="{{uid}}:priority"     value="{{settings['priority']}}"     data-name="priority" />
+
+                </div>
+            {% endfor %}
+        </div>
+    </form>
+{% endblock %}
