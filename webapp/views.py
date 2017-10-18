@@ -33,6 +33,7 @@ def logout():
 def start_page():
     return check_login() or flask.render_template(
         'start_page.html', recording=classes.recording.RecordingThread.currently_recording_models,
+        wanted=CONFIG.filter.wanted.dict,
         condition_text=classes.helpers.condition_text)
 
 @app.route('/MFC/wanted', methods=['GET', 'POST'])
