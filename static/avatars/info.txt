@@ -1,1 +1,0 @@
-Models avatar photos will be saved to this directory. This file is just to preserve this directory on GitHub. It can be deleted from your system if you wish
