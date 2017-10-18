@@ -151,7 +151,7 @@ class Config():
             free_bytes = ctypes.c_ulonglong(0)
             ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(self.settings.save_directory), None, None, ctypes.pointer(free_bytes))
             return free_bytes.value / 1024 / 1024
-        st = os.fstatvfs(self.settings.save_directory)
+        st = os.statvfs(self.settings.save_directory)
         return st.f_bavail * st.f_frsize / 1024 / 1024 / 1024
 
     def keep_recording(self, session):
