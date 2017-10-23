@@ -32,8 +32,8 @@ pacman -S python-pip git
 cd /home/yourusername
 git clone https://github.com/beaston02/MFCRecorder
 cd MFCRecorder
-pip install -r requirements.txt
-pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
+python3.6 -m pip install -r requirements.txt
+python3.6 -m pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
 Now edit the config.conf file and set the appropirate paths to your directories and wanted.txt file (see Setup)
 
 ```
@@ -47,8 +47,8 @@ yum install git
 cd /home/yourusername
 git clone https://github.com/beaston02/MFCRecorder
 cd MFCRecorder
-pip install -r requirements.txt
-pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
+python3.6 -m pip install -r requirements.txt
+python3.6 -m pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
 Now edit the config.conf file and set the appropirate paths to your directories and wanted.txt file (see Setup)
 
 ```
