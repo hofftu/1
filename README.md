@@ -7,7 +7,7 @@ This is script automates the recording of public webcam shows from myfreecams.
 
 I have only tested this on debian(7+8) and Mac OS X (10.10.4), but it should run on other OSs
 
-Requires python3.5 or newer. You can grab the newest python release from https://www.python.org/downloads/
+Requires python3.6 or newer. You can grab the newest python release from https://www.python.org/downloads/
 and mfcauto.py (https://github.com/ZombieAlex/mfcauto.py)
 
 ## installing and Cloning with the required modules:
@@ -19,8 +19,8 @@ sudo apt-install python3-pip && sudo apt-get install git
 cd /home/yourusername
 git clone https://github.com/beaston02/MFCRecorder
 cd MFCRecorder
-pip3 install -r requirements.txt
-pip3 install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
+python3.6 -m pip install -r requirements.txt
+python3.6 -m pip install --upgrade git+https://github.com/ZombieAlex/mfcauto.py@master
 Now edit the config.conf file and set the appropirate paths to your directories and wanted.txt file (see Setup)
 
 ```
@@ -66,14 +66,42 @@ https://img.mfcimg.com/photos2/###/{uid}/avatar.90x90.jpg
 https://img.mfcimg.com/photos2/123/123456789/avatar.90x90.jpg
 ```
 
-alternatively, you can add a model with the "add.py" script (must be ran with python3.5 or newer).
+alternatively, you can use the add.py script to add models to the MFC list to enable or disable their recordings. If a model already exists, her values will be updated to any new values passed in the arguments. (requires python3.5 or newer)
 
 Its usage is as follows:
-add.py {models_display_name}
 
-ie:
+add.py [model display name or uid] [options]
+
+Add models to the MFC list to enable or disable their recordings. If a model
+already exists, her values will be updated to any new values passed in the
+arguments
+
+positional arguments:
+  model                 REQUIRED: models name or uid.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -n CUSTOM_NAME, --custom_name CUSTOM_NAME
+                        set a custom name for the model, otherwise the models
+                        current display name will be used.
+  -c COMMENT, --comment COMMENT
+                        specify a comment or not for the user.
+  -m MIN_VIEWERS, --min_viewers MIN_VIEWERS
+                        set the minimum number of viewers this model must have
+                        before recording starts
+  -s STOP_VIEWERS, --stop_viewers STOP_VIEWERS
+                        set the number of viewers in which the recording will
+                        stop (should be less than minviewers
+  -l LIST_MODE, --list_mode LIST_MODE
+                        set the list mode for the model
+  -b, --block           will add the model as blocked so she will not be
+                        recorded even if auto recording conditions are met
+  -p PRIORITY, --priority PRIORITY
+                        set the priority value for the model
+                        
+Not passing options will add a model with all the default values, and the models current display name will be the default custom name if custom_name is not specified. 
 ```
-python3.5 add.py AspenRae
+python3 add.py AspenRae
 ```
 
 ## Web Interface (added Sep 4 2017)
