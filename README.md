@@ -57,6 +57,9 @@ Now edit the config.conf file and set the appropirate paths to your directories 
 
 edit the config.conf file and set the appropirate paths to your directories and wanted.txt file.
 
+
+## adding models to wanted list
+
 Add models UID (user ID) to the "wanted.txt" file (only one model per line). This uses the UID instead of the name becaue the models can change their name at anytime, but their UID always stays the same. There is a number of ways to get the models UID, but the easiest would probably be to get it from the URL for their profile image. The profile image URL is formatted as (or similar to):
 ```
 https://img.mfcimg.com/photos2/###/{uid}/avatar.90x90.jpg
