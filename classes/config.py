@@ -26,6 +26,9 @@ class Settings():
         self.priority = parser.getint('settings', 'priority')
         self.username = parser.get('web', 'username')
         self.password = parser.get('web', 'password')
+
+        #make save directory so that _get_free_diskspace can work
+        os.makedirs(self.save_directory, exist_ok=True)
     
     @property
     def save_directory(self):
