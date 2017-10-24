@@ -27,11 +27,11 @@
 }
 
 .ascending::after{
-    content: "\25B2"; //▲
+    content: "\25B2"; //arrow up
 }
 
 .descending::after{
-    content: "\25BC"; //▼
+    content: "\25BC"; //arrow down
 }
 
 .tooltip{
