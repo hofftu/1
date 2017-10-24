@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+import asyncio
+import sys
+import os
 from mfcauto import Client
-import asyncio, sys, os
 import classes.config
 
 conf = classes.config.Config(os.path.join(sys.path[0], 'config.conf'))

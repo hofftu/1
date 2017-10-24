@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+import asyncio
+import sys
+import os
+import argparse
 from mfcauto import Client
-import asyncio, sys, os, argparse
 import classes.config
 
 parser = argparse.ArgumentParser(description="Add models to the MFC list to enable or disable their recordings. If a model already exists, her values will be updated to any new values passed in the arguments",\
