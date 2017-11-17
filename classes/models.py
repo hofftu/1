@@ -15,13 +15,16 @@ def get_online_models():
         '''function for the TAGS event in mfcclient'''
         nonlocal models
 
-        all_results = mfcauto.Model.find_models(lambda m: True)
-        models = {int(model.uid): Model(model) for model in all_results
-                  if model.uid > 0 and model.bestsession['vs'] == mfcauto.STATE.FreeChat
-                  and str(model.bestsession['camserv']) in servers}
+        try:
+            all_results = mfcauto.Model.find_models(lambda m: True)
+            models = {int(model.uid): Model(model) for model in all_results
+                      if model.uid > 0 and model.bestsession['vs'] == mfcauto.STATE.FreeChat
+                      and str(model.bestsession['camserv']) in servers}
 
-        print('{} models online'.format(len(models)))
-        client.disconnect()
+            print('{} models online'.format(len(models)))
+            client.disconnect()
+        except Exception as e:
+            print(e)
 
     #setting a new event loop, because it gets closed in the mfcauo client (feels dirty)
     asyncio.set_event_loop(asyncio.new_event_loop())
@@ -29,7 +32,14 @@ def get_online_models():
     #missing the tags at this point. Rather query everything on TAGS
     client = mfcauto.SimpleClient()
     client.on(mfcauto.FCTYPE.CLIENT_TAGSLOADED, on_tags)
-    client.connect()
+
+    #put the blocking connect call into another thread in case the loop becomes unresponsive
+    t = threading.Thread(target=client.connect)
+    t.start()
+    #wait up to a minute for the model list from mfcauto
+    t.join(60)
+    if t.is_alive():
+        print("fetching online model list timed out")
 
     return models
 

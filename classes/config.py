@@ -121,32 +121,36 @@ class Config():
     def does_model_pass_filter(self, model):
         '''determines whether a recording should start'''
         f = self.filter
-        if f.wanted.is_wanted(model.uid):
-            #TODO: do we want a global min_viewers if model specific is not set??
-            m_settings = f.wanted.dict[model.uid]
-            if model.session['rc'] < max(m_settings['min_viewers'], m_settings['stop_viewers']):
+        try:
+            if f.wanted.is_wanted(model.uid):
+                #TODO: do we want a global min_viewers if model specific is not set??
+                m_settings = f.wanted.dict[model.uid]
+                if model.session['rc'] < max(m_settings['min_viewers'], m_settings['stop_viewers']):
+                    return False
+                else:
+                    model.session['condition'] = helpers.Condition.WANTED
+                    return True
+            if f.wanted.is_blacklisted(model.uid):
                 return False
-            else:
-                model.session['condition'] = helpers.Condition.WANTED
+            if f.wanted_tags:
+                matches = f.wanted_tags.intersection(model.tags if model.tags is not None else [])
+                if len(matches) >= f.min_tags and model.session['rc'] >= f.tag_viewers:
+                    model.session['condition'] = helpers.Condition.TAGS
+                    model.session['condition-text'] = ','.join(matches)
+                    return True
+            if f.newer_than_hours and model.session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
+                model.session['condition'] = helpers.Condition.NEW
                 return True
-        if f.wanted.is_blacklisted(model.uid):
+            if f.score and model.session['camscore'] > f.score:
+                model.session['condition'] = helpers.Condition.SCORE
+                return True
+            if f.viewers and model.session['rc'] > f.viewers:
+                model.session['condition'] = helpers.Condition.VIEWERS
+                return True
             return False
-        if f.wanted_tags:
-            matches = f.wanted_tags.intersection(model.tags if model.tags is not None else [])
-            if len(matches) >= f.min_tags and model.session['rc'] >= f.tag_viewers:
-                model.session['condition'] = helpers.Condition.TAGS
-                model.session['condition-text'] = ','.join(matches)
-                return True
-        if f.newer_than_hours and model.session['creation'] > int(time.time()) - f.newer_than_hours * 60 * 60:
-            model.session['condition'] = helpers.Condition.NEW
-            return True
-        if f.score and model.session['camscore'] > f.score:
-            model.session['condition'] = helpers.Condition.SCORE
-            return True
-        if f.viewers and model.session['rc'] > f.viewers:
-            model.session['condition'] = helpers.Condition.VIEWERS
-            return True
-        return False
+        except Exception as e:
+            print(e)
+            return False
 
     def _get_free_diskspace(self):
         '''https://stackoverflow.com/questions/51658/cross-platform-space-remaining-on-volume-using-python'''
@@ -159,17 +163,21 @@ class Config():
 
     def keep_recording(self, session):
         '''determines whether a recording should continue'''
-        #would it be possible that no entry is existing if we are already recording?
-        #TODO: global stop_viewers if no model specific is set??
-        if session['condition'] == helpers.Condition.VIEWERS:
-            min_viewers = self.filter.auto_stop_viewers
-        elif session['condition'] == helpers.Condition.WANTED:
-            min_viewers = self.filter.wanted.dict[session['uid']]['stop_viewers']
-        elif session['condition'] == helpers.Condition.TAGS:
-            min_viewers = self.filter.tag_stop_viewers
-        else:
-            min_viewers = 0
-        return session['rc'] >= min_viewers and self._available_space > self.settings.min_space
+        try:
+            #would it be possible that no entry is existing if we are already recording?
+            #TODO: global stop_viewers if no model specific is set??
+            if session['condition'] == helpers.Condition.VIEWERS:
+                min_viewers = self.filter.auto_stop_viewers
+            elif session['condition'] == helpers.Condition.WANTED:
+                min_viewers = self.filter.wanted.dict[session['uid']]['stop_viewers']
+            elif session['condition'] == helpers.Condition.TAGS:
+                min_viewers = self.filter.tag_stop_viewers
+            else:
+                min_viewers = 0
+            return session['rc'] >= min_viewers and self._available_space > self.settings.min_space
+        except Exception as e:
+            print(e)
+            return True
 
 class Wanted():
     def __init__(self, settings):

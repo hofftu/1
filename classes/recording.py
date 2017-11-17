@@ -11,6 +11,7 @@ def start_recording(session, settings):
     #possible race condition?
     already_recording = RecordingThread.currently_recording_models.get(session['uid'])
     if already_recording:
+        #TODO: recordings based on min_viewers won't get their rc updated here
         already_recording['rc'] = session['rc']
     else:
         RecordingThread(session, settings).start()
